@@ -1,0 +1,12 @@
+/doc
+/_build
+*_build*
+/deps
+**/deps*
+erl_crash.dump
+*.ez
+
+/test/fixtures/*.dvi
+/test/fixtures/*.pdf
+/test/fixtures/*.log
+/test/fixtures/*.aux
