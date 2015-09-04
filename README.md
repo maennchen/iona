@@ -11,8 +11,8 @@ will have:
 
 * Generate professional-quality typeset `.pdf` (and `.dvi`) documents using
   [LaTeX](http://www.latex-project.org/)
-* Built-in support for EEx templating with LaTeX-escaping helpers
-* Advanced usage: preprocessor support (for bibliographies, etc)
+* Built-in support for EEx templating with a pluggable system of LaTeX helpers
+* Preprocessor support (for bibliographies, etc)
 
 ## Prerequisites
 
