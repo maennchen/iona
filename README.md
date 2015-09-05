@@ -50,33 +50,32 @@ end
 Generate a PDF from an existing `.tex` source:
 
 ```elixir
-File.read!("simple.tex")
-|> Iona.pdf(output: "/path/to/simple.pdf")
+Iona.source(path: "simple.tex")
+|> Iona.to(:pdf, output: "/path/to/simple.pdf")
+```
+
+Generate a PDF from a raw TeX binary:
+
+```elixir
+Iona.source("\documentclass[12pt]{article} ...")
+|> Iona.to(:pdf, output: "/path/to/simple.pdf")
 ```
 
 Use a prepocessing pipeline (for bibliographies, etc):
 
 ```elixir
-File.read!("academic.tex")
-|> Iona.pdf(output: "/path/to/academic.pdf", preprocess: ~w(latex bibtex latex))
+Iona.source(path: "academic.tex")
+|> Iona.to(:pdf, output: "/path/to/academic.pdf",
+                 preprocess: ~w(latex bibtex latex))
 ```
-
-For more examples, see the documentation for
-[Iona.pdf/1](http://hexdocs.pm/iona/Iona.html#pdf/1),
-[Iona.pdf!/1](http://hexdocs.pm/iona/Iona.html#pdf!/1),
-[Iona.dvi/1](http://hexdocs.pm/iona/Iona.html#dvi/1), and
-[Iona.dvi!/1](http://hexdocs.pm/iona/Iona.html#dvi!/1).
 
 ## From an EEx TeX template
 
 ```elixir
 %{title: "My Document"}
 |> Iona.template(path: "/path/to/template.tex.eex")
-|> Iona.pdf(output: "/path/to/my_document.pdf")
+|> Iona.to(:pdf, output: "/path/to/my_document.pdf")
 ```
-
-For more examples, see the documentation for
-[Iona.template/1](http://hexdocs.pm/iona/Iona.html#template/1),
 
 ## Configuration
 
@@ -85,7 +84,7 @@ following Mix config:
 
 ```elixir
 config :iona,
-  default_preprocess: [],
+  preprocess: [],
   processors: [pdf: "pdflatex", dvi: "latex"]
   ```
 
@@ -93,7 +92,9 @@ Note you can also pass a `:preprocess` option to define a preprocessing pipeline
 on a case-by-case basis.
 
 ```elixir
-tex_string |> Iona.pdf(preprocess: ~w(latex bibtex latex))
+tex_string
+|> Iona.source
+|> Iona.to(preprocess: ~w(latex bibtex latex))
 ```
 
 ## License
