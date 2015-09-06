@@ -47,7 +47,7 @@ defmodule Iona.Mixfile do
 
   defp default_env do
     [preprocess: [],
-     processor: "pdflatex"]
+     processors: [pdf: "pdflatex", dvi: "latex"]]
   end
 
 end

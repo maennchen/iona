@@ -32,7 +32,7 @@ defmodule Test.Iona do
   end
 
   test "to! raises an exception with a bad path" do
-    assert_raise MatchError, fn ->
+    assert_raise Iona.ProcessingError, "Could not read source file at path: #{@bad}", fn ->
       Iona.source(path: @bad) |> Iona.to!(:pdf)
     end
   end

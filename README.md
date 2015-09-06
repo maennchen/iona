@@ -2,15 +2,15 @@ Iona
 ====
 [![Build Status](https://travis-ci.org/CargoSense/iona.svg?branch=master)](https://travis-ci.org/CargoSense/iona)
 
+_THIS PACKAGE IS NOT WORKING YET. CHECK BACK SOON!_
+
 Document generation (pdf, dvi) from Elixir, using LaTeX.
 
 ## Highlighted Features
 
-Nothing really yet, as this is just aspirational documentation, but it
-will have:
-
 * Generate professional-quality typeset `.pdf` (and `.dvi`) documents using
-  [LaTeX](http://www.latex-project.org/)
+  [LaTeX](http://www.latex-project.org/), and support defining your own
+  processors for different formats.
 * Built-in support for EEx templating with a pluggable system of LaTeX helpers
 * Preprocessor support (for bibliographies, etc)
 
@@ -43,6 +43,17 @@ def application do
 end
 ```
 
+## LaTeX
+
+Of course you need a TeX system installed, including `latex`, `pdflatex`,
+or any other variants you'd like to use to process your `.tex` source into final
+documents. (The default configuration assumes `pdflatex` is installed for PDF
+generation and `latex` is installed for DVI generation. See "Configuration," below.)
+
+You can download and install a TeX system at the
+[LaTeX Project website](https://latex-project.org/ftp.html) -- or using the
+the package management system of your choice.
+
 ## Examples
 
 ### From TeX source
@@ -51,22 +62,31 @@ Generate a PDF from an existing `.tex` source:
 
 ```elixir
 Iona.source(path: "simple.tex")
-|> Iona.to(:pdf, output: "/path/to/simple.pdf")
+|> Iona.write!("/path/to/document.pdf")
 ```
 
-Generate a PDF from a raw TeX binary:
+You can also use a binary string:
 
 ```elixir
 Iona.source("\documentclass[12pt]{article} ...")
-|> Iona.to(:pdf, output: "/path/to/simple.pdf")
+|> Iona.write!("/path/to/simple.pdf")
 ```
 
-Use a prepocessing pipeline (for bibliographies, etc):
+More complex preprocessing needs for citations and bibliographies?
+Define the prepocessing pipeline:
 
 ```elixir
 Iona.source(path: "academic.tex")
-|> Iona.to(:pdf, output: "/path/to/academic.pdf",
-                 preprocess: ~w(latex bibtex latex))
+|> Iona.write!("/path/to/academic.pdf",
+               preprocess: ~w(latex bibtex latex))
+```
+
+Want to get the raw document content as a binary? Use `to`:
+
+```elixir
+Iona.source(path: "fancy.tex")
+|> Iona.to(:pdf)
+|> MyModule.do_something_with_pdf_string
 ```
 
 ## From an EEx TeX template
@@ -74,7 +94,7 @@ Iona.source(path: "academic.tex")
 ```elixir
 %{title: "My Document"}
 |> Iona.template(path: "/path/to/template.tex.eex")
-|> Iona.to(:pdf, output: "/path/to/my_document.pdf")
+|> Iona.write("/path/to/my_document.pdf")
 ```
 
 ## Configuration
@@ -88,14 +108,8 @@ config :iona,
   processors: [pdf: "pdflatex", dvi: "latex"]
   ```
 
-Note you can also pass a `:preprocess` option to define a preprocessing pipeline
-on a case-by-case basis.
-
-```elixir
-tex_string
-|> Iona.source
-|> Iona.to(preprocess: ~w(latex bibtex latex))
-```
+Note you can also pass a `:preprocess` and `:processor` options to define a preprocessing pipeline
+on a case-by-case basis. See the examples above or the documentation for `Iona.to/3` and `Iona.write/3`.
 
 ## License
 
