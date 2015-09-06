@@ -2,29 +2,19 @@ defmodule Iona.Template do
 
   @moduledoc false
 
-  defmodule MissingTemplateError do
-    defexception message: "No template file given"
+  defstruct [:body, :body_path, :content, :include]
+
+  @type t :: %__MODULE__{body: Iona.eex_tex_source, body_path: Path.t, content: Iona.tex_source, include: [Path.t]}
+
+  @spec fill(assigns :: Keyword.t | Map.t, template :: t) :: {:ok, t} | {:error, binary}
+  def fill(assigns, %{body: body} = template) when is_binary(body) do
+    {:ok, %{template | content: EEx.eval_string(body, assigns: assigns)}}
   end
-
-  @type template_opts :: [
-    {:path, Path.t}
-  ]
-
-  @spec template(assigns :: Keyword.t, criteria :: Iota.Source.tex_t) :: Iona.Document.t
-  def template(assigns, criteria) when is_binary(criteria) do
-    EEx.eval_string(criteria, assigns: assigns)
-    |> Iona.source
+  def fill(assigns, %{body_path: path} = template) when is_binary(path) do
+    {:ok, %{template | content: EEx.eval_file(path, assigns: assigns)}}
   end
-
-  @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Document.t
-  def template(assigns, criteria) when is_list(criteria) do
-    case Keyword.get(criteria, :path, nil) do
-      nil -> raise MissingTemplateError
-      path -> case File.read(path) do
-                {:ok, content} -> template(assigns, content)
-                _ -> raise MissingTemplateError, message: (path |> to_string)
-              end
-    end
+  def fill(_assigns, _template) do
+    {:error, "Invalid template"}
   end
 
 end

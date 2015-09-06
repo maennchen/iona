@@ -8,16 +8,16 @@ defmodule Test.Iona do
   @citebib "test/fixtures/cite.bib"
   @items_template "test/fixtures/items.tex.eex"
 
-  test "creates a source from content" do
-    %{source: @simple_content} = Iona.source(@simple_content)
+  test "creates an input from raw TeX" do
+    assert Iona.source(@simple_content) |> Iona.Input.content == @simple_content
   end
 
-  test "creates a source from a path" do
-    %{source_path: @simple} = Iona.source(path: @simple)
+  test "creates an input from a path" do
+    assert Iona.source(path: @simple) |> Iona.Input.path == @simple
   end
 
-  test "creates a source from a bad path" do
-    %{source_path: @bad} = Iona.source(path: @bad)
+  test "creates an input from a bad path" do
+    assert Iona.source(path: @bad) |> Iona.Input.path == @bad
   end
 
   test "to returns a tuple with a PDF binary from content" do

@@ -16,7 +16,25 @@ defmodule Iona do
   |> Iona.write("/path/to/article.pdf")
   ```
   """
-  defdelegate template(assigns, criteria), to: Iona.Template
+  @type template_opts :: [
+    {:path, Path.t}
+  ]
+
+  @spec template(assigns :: Keyword.t, criteria :: eex_tex_source) :: Iona.Template.t
+  def template(assigns, criteria) when is_binary(criteria) do
+    case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
+      {:ok, template} -> template
+      _ -> nil
+    end
+  end
+
+  @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Template.t
+  def template(assigns, criteria) when is_list(criteria) do
+    case assigns |> Iona.Template.fill(%Iona.Template{body_path: Keyword.get(criteria, :path)}) do
+      {:ok, template} -> template
+      _ -> nil
+    end
+  end
 
 
   # Note: The \\ in the example below is escaping to support ExDoc.
@@ -42,14 +60,37 @@ defmodule Iona do
 
   ```elixir
   Iona.source(path: "/path/to/document.tex",
-  include: ["/path/to/document.bib",
-  "/path/to/documentclass.sty"])
+              include: ["/path/to/document.bib",
+                        "/path/to/documentclass.sty"])
   ```
 
   However, when possible, files should be placed in the search path of your TeX
   installation.
   """
-  defdelegate source(criteria), to: Iona.Source
+  @type source_opts :: [
+    {:path, Path.t},
+    {:include, [Path.t]}
+  ]
+
+  @spec source(criteria :: tex_source) :: Iona.Source.t
+  def source(criteria) when is_binary(criteria) do
+    %Iona.Source{content: criteria}
+  end
+  @spec source(criteria :: source_opts) :: Iona.Source.t
+  def source(criteria) when is_list(criteria) do
+    %Iona.Source{path: Keyword.get(criteria, :path, nil),
+                 include: Keyword.get(criteria, :include, [])}
+  end
+
+  @type supported_format :: atom
+  @type tex_source :: binary
+  @type eex_tex_source :: binary
+  @type executable :: binary
+
+  @type processing_opts :: [
+    {:preprocess, [executable]},
+    {:processor, executable}
+  ]
 
   @doc """
   Generate a formatted document as a string.
@@ -68,8 +109,15 @@ defmodule Iona do
   |> Iona.to(:pdf, processor: "xetex")
   ```
   """
-  defdelegate [to(criteria, format, opts),
-               to(criteria, format)], to: Iona.Processing
+  @spec to(input :: Iona.Input.t,
+           format :: supported_format,
+           opts :: processing_opts) :: {:ok, binary} | {:error, binary}
+  def to(input, format, opts \\ []) do
+    case input |> Iona.Processing.process(format, opts) do
+      {:ok, document} -> document |> Iona.Document.read
+      other -> other
+    end
+  end
 
   @doc """
   The same as `to/3`, but raises `Iona.ProcessingError` if it fails.
@@ -84,8 +132,15 @@ defmodule Iona do
   If writing to a file, see `write/3` and `write/4`, as they are both
   shorter to type and have better performance characteristics.
   """
-  defdelegate [to!(criteria, format, opts),
-               to!(criteria, format)], to: Iona.Processing
+  @spec to!(input :: Iona.Input.t,
+            format :: supported_format,
+            opts :: processing_opts) :: binary
+  def to!(input, format, opts \\ []) do
+    case to(input, format, opts) do
+      {:ok, result} -> result
+      {:error, err} -> raise Iona.Processing.ProcessingError, message: err
+    end
+  end
 
   @doc """
   Generate a formatted document to a file path.
@@ -105,8 +160,14 @@ defmodule Iona do
   processor: "xetex")
   ```
   """
-  defdelegate [write(doc, path, opts),
-               write(doc, path)], to: Iona.Processing
+  @spec write(input :: Iona.Input.t, path :: Path.t, opts :: processing_opts) :: :ok | {:error, term}
+  def write(input, path, opts \\ []) do
+    result = input |> Iona.Processing.process(path |> Iona.Processing.to_format, opts)
+    case result do
+      {:ok, document} -> Iona.Document.write(document, path)
+      other -> other
+    end
+  end
 
   @doc """
   The same as `write/3` but raises `Iona.ProcessingError if it fails.
@@ -125,7 +186,12 @@ defmodule Iona do
   |> Iona.write!("/path/to/document.pdf", processor: "xetex")
   ```
   """
-  defdelegate [write!(doc, path, opts),
-               write!(doc, path)], to: Iona.Processing
+  @spec write!(input :: Iona.Input.t, path :: Path.t, opts :: processing_opts) :: :ok | no_return
+  def write!(input, path, opts \\ []) do
+    case write(input, path, opts) do
+      :ok -> :ok
+      {:error, err} -> raise Iona.Processing.ProcessingError, message: err
+    end
+  end
 
 end
