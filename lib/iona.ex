@@ -113,16 +113,16 @@ defmodule Iona do
   Without processing options:
 
   ```
-  {:ok, bytes_written} = Iona.source(path: "/path/to/document.tex")
-                         |> Iona.write("/path/to/document.pdf")
+  :ok = Iona.source(path: "/path/to/document.tex")
+        |> Iona.write("/path/to/document.pdf")
   ```
 
   With processing options:
 
   ```
-  {:ok, bytes_written} = Iona.source(path: "/path/to/document.tex")
-                         |> Iona.write("/path/to/document.pdf",
-                                       processor: "xetex")
+  :ok = Iona.source(path: "/path/to/document.tex")
+        |> Iona.write("/path/to/document.pdf",
+                      processor: "xetex")
   ```
   """
   @spec write(doc :: Iona.Document.t, path :: Path.t, opts :: processing_opts) :: {:ok, pos_integer} | {:error, term}
@@ -136,7 +136,6 @@ defmodule Iona do
 
   @doc """
   The same as `write/3` but raises `Iona.ProcessingError if it fails.
-  Returns the bytes written otherwise.
 
   Without processing options:
 
@@ -152,10 +151,10 @@ defmodule Iona do
   |> Iona.write!("/path/to/document.pdf", processor: "xetex")
   ```
   """
-  @spec write!(doc :: Iona.Document.t, path :: Path.t, opts :: processing_opts) :: pos_integer | no_return
+  @spec write!(doc :: Iona.Document.t, path :: Path.t, opts :: processing_opts) :: :ok | no_return
   def write!(doc, path, opts \\ []) do
     case write(doc, path, opts) do
-      {:ok, result} -> result
+      :ok -> :ok
       {:error, err} -> raise ProcessingError, message: err
     end
   end
@@ -191,18 +190,19 @@ defmodule Iona do
   @doc false
   @spec process(doc :: Iona.Document.t, format :: atom, opts :: processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process(%{source: source} = doc, format, opts) when is_binary(source) do
-    case Briefly.create(prefix: "iona", extname: ".tex") do
-      {:ok, path} -> case File.write(path, source) do
-                       :ok -> do_process(doc, format, opts, path)
-                       _ -> {:error, "Could not write to temporary file at path: #{path}"}
-                     end
-      {:error, _} -> {:error, "Could not create temporary file"}
+    with_temp fn path ->
+      case File.write(path, source) do
+        :ok -> do_process(doc, format, opts, path)
+        _ -> {:error, "Could not write to temporary file at path: #{path}"}
+      end
     end
   end
   def process(%{source_path: source_path} = doc, format, opts) when is_binary(source_path) do
-    case File.read(source_path) do
-      {:ok, source} -> process(%{doc | source: source}, format, opts)
-      {:error, _} -> {:error, "Could not read source file at path: #{source_path}"}
+    with_temp fn path ->
+      case File.cp(source_path, path) do
+        :ok -> do_process(doc, format, opts, path)
+        _ -> {:error, "Could not copy source file at path #{source_path} to temporary file at path: #{path}"}
+      end
     end
   end
   def process(_doc, _format, _opts) do
@@ -227,6 +227,13 @@ defmodule Iona do
       end
     else
       {:error, "Could not find processor for format: #{format}"}
+    end
+  end
+
+  def with_temp(fun) do
+    case Briefly.create(prefix: "iona", extname: ".tex") do
+      {:ok, path} -> fun.(path)
+      other -> {:error, "Could not create temporary file"}
     end
   end
 

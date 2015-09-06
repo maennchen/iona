@@ -32,9 +32,16 @@ defmodule Test.Iona do
   end
 
   test "to! raises an exception with a bad path" do
-    assert_raise Iona.ProcessingError, "Could not read source file at path: #{@bad}", fn ->
+    assert_raise Iona.ProcessingError, fn ->
       Iona.source(path: @bad) |> Iona.to!(:pdf)
     end
+  end
+
+  test "write! generates a PDF" do
+    path = Briefly.create!(prefix: "iona-test", extname: ".pdf")
+    Iona.source(path: @simple)
+    |> Iona.write!(path)
+    assert String.starts_with?(File.read!(path), "%PDF")
   end
 
 end
