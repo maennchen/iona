@@ -4,6 +4,8 @@ defmodule Test.Iona do
   @bad "test/fixtures/does/not/exist.tex"
   @simple "test/fixtures/simple.tex"
   @simple_content File.read!(@simple)
+  @cite "test/fixtures/cite.tex"
+  @citebib "test/fixtures/cite.bib"
 
   test "creates a source from content" do
     %{source: @simple_content} = Iona.source(@simple_content)
@@ -41,6 +43,13 @@ defmodule Test.Iona do
     path = Briefly.create!(prefix: "iona-test", extname: ".pdf")
     Iona.source(path: @simple)
     |> Iona.write!(path)
+    assert String.starts_with?(File.read!(path), "%PDF")
+  end
+
+  test "write! generates a PDF with citations" do
+    path = Briefly.create!(prefix: "iona-test", extname: ".pdf")
+    Iona.source(path: @cite, include: [@citebib])
+    |> Iona.write!(path, preprocess: ~w(latex bibtex latex))
     assert String.starts_with?(File.read!(path), "%PDF")
   end
 

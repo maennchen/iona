@@ -10,3 +10,5 @@ erl_crash.dump
 /test/fixtures/*.pdf
 /test/fixtures/*.log
 /test/fixtures/*.aux
+/test/fixtures/*.bbl
+/test/fixtures/*.blg

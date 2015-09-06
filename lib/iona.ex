@@ -15,11 +15,18 @@ defmodule Iona do
     Iona.Supervisor.start_link()
   end
 
+  @nonstopmode "-interaction=nonstopmode"
+  @executable_default_args %{
+    "latex" => @nonstopmode,
+    "pdflatex" => @nonstopmode
+  }
+
   @type tex :: binary
   @type supported_format :: atom
 
   @type source_opts :: [
-    {:path, Path.t}
+    {:path, Path.t},
+    {:include, [Path.t]}
   ]
 
   # Note: The \\ in the example below is escaping to support ExDoc.
@@ -39,6 +46,18 @@ defmodule Iona do
   Iona.source(path: "/path/to/document.tex")
   ```
 
+  When providing a file path, you can also define additional files needed
+  for processing. They will be copied to the temporary directory where processing
+  will take place.
+
+  ```elixir
+  Iona.source(path: "/path/to/document.tex",
+              include: ["/path/to/document.bib",
+                        "/path/to/documentclass.sty"])
+  ```
+
+  However, when possible, files should be placed in the search path of your TeX
+  installation.
   """
   @spec source(criteria :: tex) :: Iona.Document.t
   def source(criteria) when is_binary(criteria) do
@@ -46,7 +65,8 @@ defmodule Iona do
   end
   @spec source(criteria :: source_opts) :: Iona.Document.t
   def source(criteria) when is_list(criteria) do
-    %Iona.Document{source_path: Keyword.get(criteria, :path, nil)}
+    %Iona.Document{source_path: Keyword.get(criteria, :path, nil),
+                   include: Keyword.get(criteria, :include, []) |> List.wrap}
   end
 
   @type processor_name :: binary
@@ -190,7 +210,8 @@ defmodule Iona do
   @doc false
   @spec process(doc :: Iona.Document.t, format :: atom, opts :: processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process(%{source: source} = doc, format, opts) when is_binary(source) do
-    with_temp fn path ->
+    with_temp fn directory ->
+      path = Path.join(directory, "document.tex")
       case File.write(path, source) do
         :ok -> do_process(doc, format, opts, path)
         _ -> {:error, "Could not write to temporary file at path: #{path}"}
@@ -198,7 +219,8 @@ defmodule Iona do
     end
   end
   def process(%{source_path: source_path} = doc, format, opts) when is_binary(source_path) do
-    with_temp fn path ->
+    with_temp fn directory ->
+      path = Path.join(directory, Path.basename(source_path))
       case File.cp(source_path, path) do
         :ok -> do_process(doc, format, opts, path)
         _ -> {:error, "Could not copy source file at path #{source_path} to temporary file at path: #{path}"}
@@ -217,24 +239,65 @@ defmodule Iona do
     end
   end
 
-  def do_process(doc, format, opts, path) do
+  @spec do_process(doc :: Iona.Document.t,
+                   format :: supported_format,
+                   opts :: processing_opts,
+                   path :: Path.t) :: {:ok, Iona.Document.t} | {:error, binary}
+  defp do_process(doc, format, opts, path) do
     processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors, format, nil))
     if processor do
       output_path = String.replace(path, ~r/\.tex$/, ".#{format}")
-      case Porcelain.exec(processor, [path], dir: Path.dirname(path), out: :string) do
-        %{status: 0} -> {:ok, %{doc | output_path: output_path}}
-        failure -> {:error, "Processing failed with output: #{failure.out}"}
+      basename = Path.basename(path, ".tex")
+      dirname = Path.dirname(path)
+      preprocessors = Keyword.get(opts, :preprocess, Iona.Config.preprocess)
+      case copy_includes(dirname, doc.include |> List.wrap) do
+        :ok ->
+          case preprocess(basename, dirname, preprocessors) do
+            :ok ->
+              case Porcelain.exec(processor,
+                                  executable_default_args(processor) ++ [basename],
+                                  dir: dirname, out: :string) do
+                %{status: 0} -> {:ok, %{doc | output_path: output_path}}
+                failure -> {:error, "Processing failed with output: #{failure.out}"}
+              end
+            err -> err
+          end
+        other -> other
       end
     else
       {:error, "Could not find processor for format: #{format}"}
     end
   end
 
-  def with_temp(fun) do
-    case Briefly.create(prefix: "iona", extname: ".tex") do
-      {:ok, path} -> fun.(path)
-      other -> {:error, "Could not create temporary file"}
+  @spec preprocess(name :: binary, dir :: Path.t, preprocessors :: [preprocessor_name]) :: :ok | {:error, binary}
+  defp preprocess(_name, _dir, []), do: :ok
+  defp preprocess(name, dir, [preprocessor|remaining]) do
+    case Porcelain.exec(preprocessor,
+                        executable_default_args(preprocessor) ++ [name],
+                        dir: dir, out: :string) do
+      %{status: 0} -> preprocess(name, dir, remaining)
+      failure -> {:error, "Preprocessing with #{preprocessor} failed with output: #{failure.out}"}
     end
+  end
+
+  defp copy_includes(_directory, []), do: :ok
+  defp copy_includes(directory, [include|remaining]) do
+    case File.cp(include, Path.join(directory, Path.basename(include))) do
+      :ok -> copy_includes(directory, remaining)
+       _ -> {:error, "Could not copy included file: #{include}"}
+    end
+  end
+
+  defp with_temp(fun) do
+    case Briefly.create(prefix: "iona", directory: true) do
+      {:ok, path} -> fun.(path)
+      _ -> {:error, "Could not create temporary location"}
+    end
+  end
+
+  defp executable_default_args(name) do
+    Map.get(@executable_default_args, name, [])
+    |> List.wrap
   end
 
 end

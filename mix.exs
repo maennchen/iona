@@ -34,7 +34,7 @@ defmodule Iona.Mixfile do
   defp deps do
     [{:earmark, "~> 0.1", only: :dev},
      {:ex_doc, "~> 0.8", only: :dev},
-     {:briefly, "~> 0.2"},
+     {:briefly, "~> 0.3"},
      {:porcelain, "~> 2.0"}]
   end
 

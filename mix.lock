@@ -1,4 +1,4 @@
-%{"briefly": {:hex, :briefly, "0.2.1"},
+%{"briefly": {:hex, :briefly, "0.3.0"},
   "earmark": {:hex, :earmark, "0.1.17"},
   "ex_doc": {:hex, :ex_doc, "0.8.4"},
   "porcelain": {:hex, :porcelain, "2.0.0"}}
