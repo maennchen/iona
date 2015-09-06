@@ -6,6 +6,7 @@ defmodule Test.Iona do
   @simple_content File.read!(@simple)
   @cite "test/fixtures/cite.tex"
   @citebib "test/fixtures/cite.bib"
+  @items_template "test/fixtures/items.tex.eex"
 
   test "creates a source from content" do
     %{source: @simple_content} = Iona.source(@simple_content)
@@ -17,6 +18,18 @@ defmodule Test.Iona do
 
   test "creates a source from a bad path" do
     %{source_path: @bad} = Iona.source(path: @bad)
+  end
+
+  test "to returns a tuple with a PDF binary from content" do
+    {:ok, out} = @simple_content |> Iona.source |> Iona.to(:pdf)
+    assert String.starts_with?(out, "%PDF")
+  end
+
+  test "template simple interpolation" do
+    out = [name: "Squash", items: ~w(Acorn Summer Spaghetti)]
+    |> Iona.template(path: @items_template)
+    |> Iona.to!(:pdf)
+    assert String.starts_with?(out, "%PDF")
   end
 
   test "to returns a tuple with a PDF binary for a good path" do

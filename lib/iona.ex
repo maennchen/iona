@@ -9,6 +9,10 @@ defmodule Iona do
     defexception message: "Could not process the document"
   end
 
+  defmodule MissingTemplateError do
+    defexception message: "No template file given"
+  end
+
   use Application
   @doc false
   def start(_type, _args) do
@@ -67,6 +71,36 @@ defmodule Iona do
   def source(criteria) when is_list(criteria) do
     %Iona.Document{source_path: Keyword.get(criteria, :path, nil),
                    include: Keyword.get(criteria, :include, []) |> List.wrap}
+  end
+
+
+  @type template_opts :: [
+    {:path, Path.t}
+  ]
+
+  @doc """
+  Fill in a template with assignments, with TeX escaping support
+
+  ```
+  [title: "An Article", author: "Bruce Williams"]
+  |> Iona.template(path: "/path/to/article.tex")
+  |> Iona.write("/path/to/article.pdf")
+  ```
+  """
+  @spec template(assigns :: Keyword.t, criteria :: tex) :: Iona.Document.t
+  def template(assigns, criteria) when is_binary(criteria) do
+    EEx.eval_string(criteria, assigns: assigns)
+    |> source
+  end
+  @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Document.t
+  def template(assigns, criteria) when is_list(criteria) do
+    case Keyword.get(criteria, :path, nil) do
+      nil -> raise MissingTemplateError
+      path -> case File.read(path) do
+                {:ok, content} -> template(assigns, content)
+                _ -> raise MissingTemplateError, message: (path |> to_string)
+              end
+    end
   end
 
   @type processor_name :: binary
