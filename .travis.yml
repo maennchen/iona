@@ -3,6 +3,8 @@ elixir: 1.0.5
 notifications:
   recipients:
     - bruce.williams@cargosense.com
+before_install:
+  - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
 otp_release:
   - 17.1
   - 17.5
