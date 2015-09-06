@@ -129,7 +129,7 @@ defmodule Iona do
   def write(doc, path, opts \\ []) do
     result = doc |> process(path |> to_format, opts)
     case result do
-      {:ok, document} -> File.copy(document.output_path, path)
+      {:ok, document} -> File.cp(document.output_path, path)
       other -> other
     end
   end
@@ -166,7 +166,7 @@ defmodule Iona do
     if supported_format?(format) do
       format
     else
-      raise UnsupportedFormat
+      raise UnsupportedFormat, message: (format |> to_string)
     end
   end
 
@@ -191,12 +191,18 @@ defmodule Iona do
   @doc false
   @spec process(doc :: Iona.Document.t, format :: atom, opts :: processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process(%{source: source} = doc, format, opts) when is_binary(source) do
-    {:ok, %{doc | output_path: "stub." <> (format |> to_string)}}
+    case Briefly.create(prefix: "iona", extname: ".tex") do
+      {:ok, path} -> case File.write(path, source) do
+                       :ok -> do_process(doc, format, opts, path)
+                       _ -> {:error, "Could not write to temporary file at path: #{path}"}
+                     end
+      {:error, _} -> {:error, "Could not create temporary file"}
+    end
   end
   def process(%{source_path: source_path} = doc, format, opts) when is_binary(source_path) do
     case File.read(source_path) do
       {:ok, source} -> process(%{doc | source: source}, format, opts)
-      {:error, _} -> {:error, "Could not read source file at path: " <> source_path}
+      {:error, _} -> {:error, "Could not read source file at path: #{source_path}"}
     end
   end
   def process(_doc, _format, _opts) do
@@ -208,6 +214,19 @@ defmodule Iona do
     case File.read(doc.output_path) do
       {:error, _} -> {:error, "Could not read generated document at path: " <> doc.output_path}
       other -> other
+    end
+  end
+
+  def do_process(doc, format, opts, path) do
+    processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors, format, nil))
+    if processor do
+      output_path = String.replace(path, ~r/\.tex$/, ".#{format}")
+      case Porcelain.exec(processor, [path], dir: Path.dirname(path), out: :string) do
+        %{status: 0} -> {:ok, %{doc | output_path: output_path}}
+        failure -> {:error, "Processing failed with output: #{failure.out}"}
+      end
+    else
+      {:error, "Could not find processor for format: #{format}"}
     end
   end
 

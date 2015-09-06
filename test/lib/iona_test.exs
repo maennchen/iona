@@ -17,14 +17,14 @@ defmodule Test.Iona do
     %{source_path: @bad} = Iona.source(path: @bad)
   end
 
-  test "to returns a tuple with a document for a good path" do
-    {:ok, doc} = Iona.source(path: @simple) |> Iona.to(:pdf)
-    assert doc.source == @simple_content
+  test "to returns a tuple with a PDF binary for a good path" do
+    {:ok, out} = Iona.source(path: @simple) |> Iona.to(:pdf)
+    assert String.starts_with?(out, "%PDF")
   end
 
-  test "to! returns a document for a good path" do
-    doc = Iona.source(path: @simple) |> Iona.to!(:pdf)
-    assert doc.source == @simple_content
+  test "to! returns a PDF binary for a good path" do
+    out = Iona.source(path: @simple) |> Iona.to!(:pdf)
+    assert String.starts_with?(out, "%PDF")
   end
 
   test "to returns a tuple with an error for a bad path" do

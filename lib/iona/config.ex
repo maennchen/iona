@@ -1,4 +1,4 @@
-defmodule Iono.Config do
+defmodule Iona.Config do
   @moduledoc false
 
   defp get(key) do

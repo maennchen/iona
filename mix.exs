@@ -8,6 +8,7 @@ defmodule Iona.Mixfile do
      source_url: "https://github.com/CargoSense/iona",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     dialyzer: [flags: "--fullpath"],
      package: package,
      deps: deps]
   end
@@ -16,7 +17,7 @@ defmodule Iona.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger, :briefly],
+    [applications: [:logger, :briefly, :porcelain],
      mod: {Iona, []},
      env: default_env]
   end
