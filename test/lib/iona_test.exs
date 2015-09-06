@@ -47,7 +47,7 @@ defmodule Test.Iona do
   end
 
   test "to! raises an exception with a bad path" do
-    assert_raise Iona.ProcessingError, fn ->
+    assert_raise Iona.Processing.ProcessingError, fn ->
       Iona.source(path: @bad) |> Iona.to!(:pdf)
     end
   end
