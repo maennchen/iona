@@ -7,6 +7,7 @@ defmodule Test.Iona do
   @cite "test/fixtures/cite.tex"
   @citebib "test/fixtures/cite.bib"
   @items_template "test/fixtures/items.tex.eex"
+  @add_two_template "test/fixtures/add-two.tex.eex"
 
   test "creates an input from raw TeX" do
     assert Iona.source(@simple_content) |> Iona.Input.content == @simple_content
@@ -33,31 +34,42 @@ defmodule Test.Iona do
   end
 
   test "templates are escaped by default" do
-    template = [name: "Escaped", items: ~W(\foo \bar \baz)]
+    content = [name: "Escaped", items: ~W(\foo \bar \baz)]
     |> Iona.template(path: @items_template)
-    assert String.contains?(template.content, ~S(\textbackslash{}foo))
-    assert String.contains?(template.content, ~S(\textbackslash{}bar))
-    assert String.contains?(template.content, ~S(\textbackslash{}baz))
+    |> read_content
+    assert String.contains?(content, ~S(\textbackslash{}foo))
+    assert String.contains?(content, ~S(\textbackslash{}bar))
+    assert String.contains?(content, ~S(\textbackslash{}baz))
   end
 
   test "templates can accept non-strings" do
-    template = [name: "Integers", items: [1, 2, 3]]
+    content = [name: "Integers", items: [1, 2, 3]]
     |> Iona.template(path: @items_template)
-    assert String.contains?(template.content, ~S(\item 1))
-    assert String.contains?(template.content, ~S(\item 2))
-    assert String.contains?(template.content, ~S(\item 3))
+    |> read_content
+    assert String.contains?(content, ~S(\item 1))
+    assert String.contains?(content, ~S(\item 2))
+    assert String.contains?(content, ~S(\item 3))
   end
 
   test "template can provide raw values" do
-    template = [name: "Escaped", items: [{:safe, ~S(\foo)},
+    content = [name: "Escaped", items: [{:safe, ~S(\foo)},
                                          {:safe, ~S(\bar)},
                                          {:safe, ~S(\baz)}]]
     |> Iona.template(path: @items_template)
-    assert String.contains?(template.content, ~S(\foo))
-    assert String.contains?(template.content, ~S(\bar))
-    assert String.contains?(template.content, ~S(\baz))
+    |> read_content
+    assert String.contains?(content, ~S(\foo))
+    assert String.contains?(content, ~S(\bar))
+    assert String.contains?(content, ~S(\baz))
   end
 
+  test "template can accept additional helpers" do
+    content = [name: "Add Two", items: [1, 2, 3]]
+    |> Iona.template(path: @add_two_template, helpers: [Test.Iona.Template.Helpers.AddTwo])
+    |> read_content
+    assert String.contains?(content, ~S(\item 3))
+    assert String.contains?(content, ~S(\item 4))
+    assert String.contains?(content, ~S(\item 5))
+  end
 
   test "to returns a tuple with a PDF binary for a good path" do
     {:ok, out} = Iona.source(path: @simple) |> Iona.to(:pdf)
@@ -92,5 +104,7 @@ defmodule Test.Iona do
     |> Iona.write!(path, preprocess: ~w(latex bibtex latex))
     assert String.starts_with?(File.read!(path), "%PDF")
   end
+
+  defp read_content(%{content: content}), do: content |> IO.iodata_to_binary
 
 end

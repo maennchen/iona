@@ -30,12 +30,13 @@ defmodule Iona do
 
   @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Template.t
   def template(assigns, criteria) when is_list(criteria) do
-    case assigns |> Iona.Template.fill(%Iona.Template{body_path: Keyword.get(criteria, :path)}) do
+    template = %Iona.Template{body_path: Keyword.get(criteria, :path),
+                              helpers: Keyword.get(criteria, :helpers, [])}
+    case assigns |> Iona.Template.fill(template) do
       {:ok, template} -> template
       _ -> nil
     end
   end
-
 
   # Note: The \\ in the example below is escaping to support ExDoc.
   # In the actual LaTeX source, this would be \documentclass
@@ -72,7 +73,7 @@ defmodule Iona do
     {:include, [Path.t]}
   ]
 
-  @spec source(criteria :: tex_source) :: Iona.Source.t
+  @spec source(criteria :: binary) :: Iona.Source.t
   def source(criteria) when is_binary(criteria) do
     %Iona.Source{content: criteria}
   end
@@ -83,7 +84,7 @@ defmodule Iona do
   end
 
   @type supported_format :: atom
-  @type tex_source :: binary
+  @type tex_source :: iodata
   @type eex_tex_source :: binary
   @type executable :: binary
 

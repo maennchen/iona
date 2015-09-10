@@ -2,17 +2,17 @@ defmodule Iona.Template do
 
   @moduledoc false
 
-  defstruct [:body, :body_path, :content, :include]
+  defstruct [:body, :body_path, :content, :include, :helpers]
 
-  @type t :: %__MODULE__{body: Iona.eex_tex_source, body_path: Path.t, content: Iona.tex_source, include: [Path.t]}
+  @type t :: %__MODULE__{body: Iona.eex_tex_source, body_path: Path.t, content: iodata, include: [Path.t], helpers: [atom]}
 
   @spec fill(assigns :: Keyword.t | Map.t, template :: t) :: {:ok, t} | {:error, binary}
   def fill(assigns, %{body: body} = template) when is_binary(body) do
-    {:ok, %{template | content: eval(prepare(body), assigns)}}
+    {:ok, %{template | content: eval(prepare(body, template), assigns)}}
   end
   def fill(assigns, %{body_path: path} = template) when is_binary(path) do
     case File.read(path) do
-      {:ok, data} -> {:ok, %{template | content: eval(prepare(data), assigns, file: path)}}
+      {:ok, data} -> {:ok, %{template | content: eval(prepare(data, template), assigns, file: path)}}
       _ -> {:error, "Could not read template at path #{path}"}
     end
   end
@@ -20,14 +20,14 @@ defmodule Iona.Template do
     {:error, "Invalid template"}
   end
 
-  @spec prepare(raw :: Iona.eex_tex_source) :: Iona.eex_tex_source
-  defp prepare(raw) do
-    bootstrap <> raw
+  @spec prepare(raw :: Iona.eex_tex_source, template :: Iono.Template.t) :: Iona.eex_tex_source
+  defp prepare(raw, %{helpers: helpers}) do
+    bootstrap(helpers |> List.wrap) <> raw
   end
 
-  @spec bootstrap :: binary
-  defp bootstrap do
-    Iona.Config.helpers
+  @spec bootstrap(helpers :: [atom]) :: binary
+  defp bootstrap(helpers) do
+    Iona.Config.helpers ++ helpers
     |> Enum.map(&("<% import #{&1} %>"))
     |> Enum.join
   end
@@ -38,7 +38,9 @@ defmodule Iona.Template do
     |> unwrap
   end
 
-  defp unwrap({:safe, body}), do: body |> IO.iodata_to_binary
-  defp unwrap(body), do: body |> IO.iodata_to_binary
+  @spec unwrap(wrapped :: {:safe, Iona.tex_source}) :: Iona.tex_source
+  defp unwrap({:safe, body}), do: body
+  @spec unwrap(not_wrapped :: Iona.tex_source) :: Iona.tex_source
+  defp unwrap(body), do: body
 
 end
