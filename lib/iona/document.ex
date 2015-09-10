@@ -4,7 +4,7 @@ defmodule Iona.Document do
 
   defstruct [:format, :output_path]
 
-  @type t :: %__MODULE__{format: Iona.supported_format, output_path: Path.t}
+  @type t :: %__MODULE__{format: Iona.supported_format_t, output_path: Path.t}
 
   @spec read(document :: t) :: {:ok, binary} | {:error, File.posix}
   def read(%{output_path: path}), do: File.read(path)

@@ -8,7 +8,7 @@ defprotocol Iona.Input do
   @spec path(input :: t) :: Path.t | nil
   def path(input)
 
-  @spec content(input :: t) :: Iona.tex_source
+  @spec content(input :: t) :: Iona.tex_t
   def content(input)
 
   @spec included_files(input :: t) :: [Path.t]

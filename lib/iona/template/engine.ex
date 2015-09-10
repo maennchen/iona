@@ -2,11 +2,13 @@
 # https://github.com/phoenixframework/phoenix_html
 defmodule Iona.Template.Engine do
 
+  @moduledoc false
+
   use EEx.Engine
 
   defdelegate escape(value), to: Iona.Template.Helper
 
- @doc false
+  @doc false
   def handle_body(body), do: body
 
   @doc false
@@ -22,9 +24,9 @@ defmodule Iona.Template.Engine do
     expr   = expr(expr)
     buffer = unwrap(buffer)
     {:safe, quote do
-      tmp1 = unquote(buffer)
-      [tmp1|unquote(to_safe(expr, line))]
-     end}
+       tmp1 = unquote(buffer)
+       [tmp1|unquote(to_safe(expr, line))]
+    end}
   end
 
   @doc false

@@ -4,7 +4,7 @@ defmodule Iona.Template do
 
   defstruct [:body, :body_path, :content, :include, :helpers]
 
-  @type t :: %__MODULE__{body: Iona.eex_tex_source, body_path: Path.t, content: iodata, include: [Path.t], helpers: [atom]}
+  @type t :: %__MODULE__{body: Iona.eex_tex_t, body_path: Path.t, content: iodata, include: [Path.t], helpers: [atom]}
 
   @spec fill(assigns :: Keyword.t | Map.t, template :: t) :: {:ok, t} | {:error, binary}
   def fill(assigns, %{body: body} = template) when is_binary(body) do
@@ -20,7 +20,7 @@ defmodule Iona.Template do
     {:error, "Invalid template"}
   end
 
-  @spec prepare(raw :: Iona.eex_tex_source, template :: Iono.Template.t) :: Iona.eex_tex_source
+  @spec prepare(raw :: Iona.eex_tex_t, template :: Iono.Template.t) :: Iona.eex_tex_t
   defp prepare(raw, %{helpers: helpers}) do
     bootstrap(helpers |> List.wrap) <> raw
   end
@@ -38,9 +38,9 @@ defmodule Iona.Template do
     |> unwrap
   end
 
-  @spec unwrap(wrapped :: {:safe, Iona.tex_source}) :: Iona.tex_source
+  @spec unwrap(wrapped :: {:safe, Iona.tex_t}) :: Iona.tex_t
   defp unwrap({:safe, body}), do: body
-  @spec unwrap(not_wrapped :: Iona.tex_source) :: Iona.tex_source
+  @spec unwrap(not_wrapped :: Iona.tex_t) :: Iona.tex_t
   defp unwrap(body), do: body
 
 end

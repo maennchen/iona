@@ -20,7 +20,7 @@ defmodule Iona do
     {:path, Path.t}
   ]
 
-  @spec template(assigns :: Keyword.t, criteria :: eex_tex_source) :: Iona.Template.t
+  @spec template(assigns :: Keyword.t, criteria :: eex_tex_t) :: Iona.Template.t
   def template(assigns, criteria) when is_binary(criteria) do
     case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
       {:ok, template} -> template
@@ -83,14 +83,14 @@ defmodule Iona do
                  include: Keyword.get(criteria, :include, [])}
   end
 
-  @type supported_format :: atom
-  @type tex_source :: iodata
-  @type eex_tex_source :: binary
-  @type executable :: binary
+  @type supported_format_t :: atom
+  @type tex_t :: iodata
+  @type eex_tex_t :: binary
+  @type executable_t :: binary
 
   @type processing_opts :: [
-    {:preprocess, [executable]},
-    {:processor, executable}
+    {:preprocess, [executable_t]},
+    {:processor, executable_t}
   ]
 
   @doc """
@@ -111,7 +111,7 @@ defmodule Iona do
   ```
   """
   @spec to(input :: Iona.Input.t,
-           format :: supported_format,
+           format :: supported_format_t,
            opts :: processing_opts) :: {:ok, binary} | {:error, binary}
   def to(input, format, opts \\ []) do
     case input |> Iona.Processing.process(format, opts) do
@@ -134,7 +134,7 @@ defmodule Iona do
   shorter to type and have better performance characteristics.
   """
   @spec to!(input :: Iona.Input.t,
-            format :: supported_format,
+            format :: supported_format_t,
             opts :: processing_opts) :: binary
   def to!(input, format, opts \\ []) do
     case to(input, format, opts) do

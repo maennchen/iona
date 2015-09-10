@@ -16,7 +16,7 @@ defmodule Iona.Processing do
     "pdflatex" => @nonstopmode
   }
 
-  @spec to_format(path :: Path.t) :: Iona.supported_format | no_return
+  @spec to_format(path :: Path.t) :: Iona.supported_format_t | no_return
   def to_format(path) do
     format = path |> parse_format
     if supported_format?(format) do
@@ -26,7 +26,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec supported_format?(format :: Iona.supported_format) :: boolean
+  @spec supported_format?(format :: Iona.supported_format_t) :: boolean
   defp supported_format?(format) do
     Enum.member?(supported_formats, format)
   end
@@ -39,12 +39,12 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec supported_formats :: [Iona.supported_format]
+  @spec supported_formats :: [Iona.supported_format_t]
   defp supported_formats do
     Iona.Config.processors |> Keyword.keys
   end
 
-  @spec process(input :: Iona.Input.t, format :: Iona.supported_format, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec process(input :: Iona.Input.t, format :: Iona.supported_format_t, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process(input, format, opts \\ []) do
     if Iona.Input.path?(input) do
       input |> process_path(format, opts)
@@ -53,7 +53,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec process_content(input :: Iona.Input, format :: Iona.supported_format, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec process_content(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process_content(input, format, opts) do
     with_temp fn directory ->
       path = Path.join(directory, "document.tex")
@@ -64,7 +64,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec process_content(input :: Iona.Input, format :: Iona.supported_format, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec process_content(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process_path(input, format, opts) do
     with_temp fn directory ->
       input_path = input |> Iona.Input.path
@@ -76,7 +76,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec do_process(input :: Iona.Input, format :: Iona.supported_format, opts :: Iona.processing_opts, path :: Path.t) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec do_process(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts, path :: Path.t) :: {:ok, Iona.Document.t} | {:error, binary}
   defp do_process(input, format, opts, path) do
     processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors, format, nil))
     if processor do
@@ -103,7 +103,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec preprocess(name :: binary, dir :: Path.t, preprocessors :: [Iona.executable]) :: :ok | {:error, binary}
+  @spec preprocess(name :: binary, dir :: Path.t, preprocessors :: [Iona.executable_t]) :: :ok | {:error, binary}
   defp preprocess(_name, _dir, []), do: :ok
   defp preprocess(name, dir, [preprocessor|remaining]) do
     case Porcelain.exec(preprocessor,
@@ -131,7 +131,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec executable_default_args(name :: Iona.executable) :: [binary]
+  @spec executable_default_args(name :: Iona.executable_t) :: [binary]
   defp executable_default_args(name) do
     Map.get(@executable_default_args, name, [])
     |> List.wrap
