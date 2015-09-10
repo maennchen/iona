@@ -32,6 +32,33 @@ defmodule Test.Iona do
     assert String.starts_with?(out, "%PDF")
   end
 
+  test "templates are escaped by default" do
+    template = [name: "Escaped", items: ~W(\foo \bar \baz)]
+    |> Iona.template(path: @items_template)
+    assert String.contains?(template.content, ~S(\textbackslash{}foo))
+    assert String.contains?(template.content, ~S(\textbackslash{}bar))
+    assert String.contains?(template.content, ~S(\textbackslash{}baz))
+  end
+
+  test "templates can accept non-strings" do
+    template = [name: "Integers", items: [1, 2, 3]]
+    |> Iona.template(path: @items_template)
+    assert String.contains?(template.content, ~S(\item 1))
+    assert String.contains?(template.content, ~S(\item 2))
+    assert String.contains?(template.content, ~S(\item 3))
+  end
+
+  test "template can provide raw values" do
+    template = [name: "Escaped", items: [{:safe, ~S(\foo)},
+                                         {:safe, ~S(\bar)},
+                                         {:safe, ~S(\baz)}]]
+    |> Iona.template(path: @items_template)
+    assert String.contains?(template.content, ~S(\foo))
+    assert String.contains?(template.content, ~S(\bar))
+    assert String.contains?(template.content, ~S(\baz))
+  end
+
+
   test "to returns a tuple with a PDF binary for a good path" do
     {:ok, out} = Iona.source(path: @simple) |> Iona.to(:pdf)
     assert String.starts_with?(out, "%PDF")
