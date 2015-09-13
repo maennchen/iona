@@ -42,7 +42,7 @@ defmodule Iona.Mixfile do
     [description: "Document generation using LaTeX",
      files: ["lib", "config", "mix.exs", "README*", "LICENSE"],
      contributors: ["Bruce Williams"],
-     licenses: ["MIT"],
+     licenses: ["Apache 2"],
      links: %{github: "https://github.com/CargoSense/iona"}]
   end
 
