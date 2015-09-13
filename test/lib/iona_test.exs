@@ -8,6 +8,7 @@ defmodule Test.Iona do
   @citebib "test/fixtures/cite.bib"
   @items_template "test/fixtures/items.tex.eex"
   @add_two_template "test/fixtures/add-two.tex.eex"
+  @safe_template "test/fixtures/safe.tex.eex"
 
   test "creates an input from raw TeX" do
     assert Iona.source(@simple_content) |> Iona.Input.content == @simple_content
@@ -71,6 +72,13 @@ defmodule Test.Iona do
     assert String.contains?(content, ~S(\item 5))
   end
 
+  test "template can insert safe content" do
+    content = [name: ~S({\bf Safe})]
+    |> Iona.template(path: @safe_template)
+    |> read_content
+    assert String.contains?(content, ~S(\item[Name] {\bf Safe}))
+  end
+
   test "to returns a tuple with a PDF binary for a good path" do
     {:ok, out} = Iona.source(path: @simple) |> Iona.to(:pdf)
     assert String.starts_with?(out, "%PDF")
@@ -106,5 +114,4 @@ defmodule Test.Iona do
   end
 
   defp read_content(%{content: content}), do: content |> IO.iodata_to_binary
-
 end

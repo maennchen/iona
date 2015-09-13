@@ -7,19 +7,22 @@ defmodule Iona.Template.Helper do
   """
 
   @replace [
-    {~r/([{}])/,    ~S(\\\\\1)},
-    {~r/\\/,        ~S(\textbackslash{})},
-    {~r/\^/,        ~S(\textasciicircum{})},
-    {~r/~/,         ~S(\textasciitilde{})},
-    {~r/\|/,        ~S(\textbar{})},
-    {~r/\</,        ~S(\textless{})},
-    {~r/\>/,        ~S(\textgreater{})},
-    {~r/([_$&%\#])/, ~S(\\\\\1)}]
-
+    {"{", "\\{"},
+    {"}", "\\}"},
+    {~r/\\(?![{}])/, "\\textbackslash{}"},
+    {"#", "\\#"},
+    {"$", "\\$"},
+    {"%", "\\%"},
+    {"&", "\\&"},
+    {"^", "\\textasciicircum{}"},
+    {"_", "\\_"},
+    {"|", "\\textbar{}"},
+    {"~", "\\textasciitilde{}"}
+  ]
   @doc """
   Escape raw LaTeX commands and reserved characters, to include:
 
-  * Brackets and braces
+  * Angle brackets and curly braces
   * Backslashes
   * Carets
   * Tildes
@@ -35,5 +38,10 @@ defmodule Iona.Template.Helper do
       memo |> String.replace(pattern, replacement)
     end
   end
+
+  @doc """
+  Mark text as safe to leave unescaped
+  """
+  def safe(text), do: {:safe, text}
 
 end

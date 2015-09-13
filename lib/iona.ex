@@ -24,7 +24,7 @@ defmodule Iona do
   def template(assigns, criteria) when is_binary(criteria) do
     case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
       {:ok, template} -> template
-      _ -> nil
+      other -> other
     end
   end
 
@@ -34,7 +34,7 @@ defmodule Iona do
                               helpers: Keyword.get(criteria, :helpers, [])}
     case assigns |> Iona.Template.fill(template) do
       {:ok, template} -> template
-      _ -> nil
+      other -> other
     end
   end
 
