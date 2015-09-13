@@ -3,7 +3,7 @@ defmodule Iona.Mixfile do
 
   def project do
     [app: :iona,
-     version: "0.1.0",
+     version: "0.2.0",
      elixir: "~> 1.0",
      source_url: "https://github.com/CargoSense/iona",
      build_embedded: Mix.env == :prod,
@@ -48,7 +48,8 @@ defmodule Iona.Mixfile do
 
   defp default_env do
     [preprocess: [],
-     processors: [pdf: "pdflatex", dvi: "latex"]]
+     processors: [pdf: "pdflatex", dvi: "latex"],
+     helpers: [Iona.Template.Helper]]
   end
 
 end

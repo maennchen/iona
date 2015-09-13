@@ -1,0 +1,10 @@
+% Courtesy http://www.maths.liv.ac.uk/~rakow/LatexGuide/very_simple.html
+\documentclass[12pt]{article}
+
+\begin{document}
+
+\begin{description}
+  \item[Name] <%= raw @name %>
+\end{description}
+
+\end{document}
