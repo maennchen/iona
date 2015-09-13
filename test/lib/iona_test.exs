@@ -8,7 +8,7 @@ defmodule Test.Iona do
   @citebib "test/fixtures/cite.bib"
   @items_template "test/fixtures/items.tex.eex"
   @add_two_template "test/fixtures/add-two.tex.eex"
-  @safe_template "test/fixtures/safe.tex.eex"
+  @raw_template "test/fixtures/raw.tex.eex"
 
   test "creates an input from raw TeX" do
     assert Iona.source(@simple_content) |> Iona.Input.content == @simple_content
@@ -74,7 +74,7 @@ defmodule Test.Iona do
 
   test "template can insert safe content" do
     content = [name: ~S({\bf Safe})]
-    |> Iona.template(path: @safe_template)
+    |> Iona.template(path: @raw_template)
     |> read_content
     assert String.contains?(content, ~S(\item[Name] {\bf Safe}))
   end

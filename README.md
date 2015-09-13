@@ -2,17 +2,15 @@ Iona
 ====
 [![Build Status](https://travis-ci.org/CargoSense/iona.svg?branch=master)](https://travis-ci.org/CargoSense/iona)
 
-_THIS PACKAGE IS NOT WORKING YET. CHECK BACK SOON!_
-
-Document generation (pdf, dvi) from Elixir, using LaTeX.
+Document generation from Elixir, using LaTeX.
 
 ## Highlighted Features
 
 * Generate professional-quality typeset `.pdf` (and `.dvi`) documents using
   [LaTeX](http://www.latex-project.org/), and support defining your own
-  processors for different formats.
-* Built-in support for EEx templating with a pluggable system of LaTeX helpers
-* Preprocessor support (for bibliographies, etc)
+  TeX processors for different formats.
+* Built-in support for EEx templating with automatic escaping and a custom helpers
+* Preprocessing support (multiple runs for bibliographies, etc)
 
 ## Prerequisites
 
@@ -30,7 +28,7 @@ Add as a dependency to your `mix.exs`:
 ```elixir
 def deps do
   [
-    iona: "~> 0.1"
+    iona: "~> 0.2"
   ]
 end
 ```
@@ -97,6 +95,40 @@ Iona.source(path: "fancy.tex")
 |> Iona.write("/path/to/my_document.pdf")
 ```
 
+Values are inserted into EEx with, eg, `<%= @title %>` after being automatically
+escaped by `Iona.Template.Helper.escape/1`.
+
+If you're confident values are safe for raw insertion into your LaTeX documents
+(or you'd like to support insertion of LaTeX commands), use `raw/1`, made
+available by default as part of `Iona.Template.Helper`:
+
+For instance, if you wanted to style `@title` as boldface, you could pass it
+as `"{\bf My Document}"` and insert it as a raw string:
+
+```
+<%= raw @title %>
+```
+
+### With Custom Helpers
+
+You can import additional helper modules for use in your templates by two methods.
+
+The first (and preferred) method is by overriding the `:helpers` application
+configuration setting (see "Configuration," below).
+
+You can also pass a `:helpers` option to `Iona.template/1` with a list of
+additional helpers:
+
+```elixir
+%{title: "My Document"}
+|> Iona.template(path: "/path/to/template.tex.eex",
+                 helpers: [My.Custom.HelperModule])
+|> Iona.write("/path/to/my_document.pdf")
+```
+
+Note in this case the setting is additive; the list is concatenated with the
+`:helpers` defined in the application configuration.
+
 ## Configuration
 
 The default, out-of-the-box settings for Iona are equivalent to the
@@ -104,6 +136,7 @@ following Mix config:
 
 ```elixir
 config :iona,
+  helpers: [Iona.Template.Helper],
   preprocess: [],
   processors: [pdf: "pdflatex", dvi: "latex"]
   ```

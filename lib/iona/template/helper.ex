@@ -40,8 +40,8 @@ defmodule Iona.Template.Helper do
   end
 
   @doc """
-  Mark text as safe to leave unescaped
+  Mark text as a string to be inserted raw and unescaped
   """
-  def safe(text), do: {:safe, text}
+  def raw(text), do: {:safe, text}
 
 end
