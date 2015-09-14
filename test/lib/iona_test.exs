@@ -22,6 +22,22 @@ defmodule Test.Iona do
     assert Iona.source(path: @bad) |> Iona.Input.path == @bad
   end
 
+  test "supports preprocess functions passing" do
+    {:ok, _} = Iona.source(path: @simple)
+    |> Iona.to(:pdf, preprocess: [fn (_directory, _name) -> :ok end])
+  end
+
+  test "supports preprocess functions returning an exec" do
+    {:ok, _} = Iona.source(path: @simple)
+    |> Iona.to(:pdf, preprocess: [fn (_directory, name) -> {:shell, "file #{name}"} end])
+  end
+
+  test "supports preprocess functions failing" do
+    base = Path.basename(@simple)
+    {:error, ^base} = Iona.source(path: @simple)
+    |> Iona.to(:pdf, preprocess: [fn (_directory, name) -> {:error, name} end])
+  end
+
   test "to returns a tuple with a PDF binary from content" do
     {:ok, out} = @simple_content |> Iona.source |> Iona.to(:pdf)
     assert String.starts_with?(out, "%PDF")

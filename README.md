@@ -87,6 +87,39 @@ Iona.source(path: "fancy.tex")
 |> MyModule.do_something_with_pdf_string
 ```
 
+### Complex preprocessors
+
+You can provide functions in the preprocessing pipeline too. The function will
+be invoked, given the temporary directory processing is occuring and the
+basename of the original file (eg, `"source.tex"`):
+
+```elixir
+Iona.source(path: "source.tex")
+|> Iona.write!("/path/to/source.pdf",
+               preprocess: [fn (directory, filename) -> :ok end])
+```
+
+Function preprocessors should return:
+
+* `:ok` if processing should continue
+* `{:shell, command}` to indicate a command should be run as a preprocessor (see example below)
+* `{:error, reason}` if processing should halt
+
+If given `{:shell, command}`, Iona will execute that command as a preprocessor.
+This is especially useful for interpolation, eg:
+
+```elixir
+knitr = fn (_, filename) ->
+  {:shell, "R -e 'library(knitr);knitr(\"#{filename}\");'" }
+end
+
+Iona.source(path: "graphs.Rnw")
+|> Iona.write!("/path/to/graphs.pdf",
+               preprocess: [knitr])
+```
+
+Important: As always, only interpolate trusted input into shell commands.
+
 ## From an EEx TeX template
 
 ```elixir
