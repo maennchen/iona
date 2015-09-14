@@ -29,7 +29,7 @@ defmodule Test.Iona do
 
   test "supports preprocess functions returning an exec" do
     {:ok, _} = Iona.source(path: @simple)
-    |> Iona.to(:pdf, preprocess: [fn (_directory, name) -> {:shell, "file #{name}.tex"} end])
+    |> Iona.to(:pdf, preprocess: [fn (_directory, name) -> {:shell, "file #{name}"} end])
   end
 
   test "supports preprocess functions failing" do
