@@ -86,7 +86,7 @@ defmodule Iona.Processing do
       preprocessors = Keyword.get(opts, :preprocess, Iona.Config.preprocess)
       case copy_includes(dirname, Iona.Input.included_files(input)) do
         :ok ->
-          case preprocess(basename, dirname, preprocessors) do
+          case preprocess(Path.basename(path), dirname, preprocessors) do
             :ok ->
               case Porcelain.exec(processor,
                                   executable_default_args(processor) ++ [basename],
@@ -103,14 +103,28 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec preprocess(name :: binary, dir :: Path.t, preprocessors :: [Iona.executable_t]) :: :ok | {:error, binary}
-  defp preprocess(_name, _dir, []), do: :ok
-  defp preprocess(name, dir, [preprocessor|remaining]) do
+  @spec preprocess(filename :: binary, dir :: Path.t, preprocessors :: [Iona.executable_t]) :: :ok | {:error, binary}
+  defp preprocess(_filename, _dir, []), do: :ok
+  defp preprocess(filename, dir, [preprocessor|remaining]) when is_binary(preprocessor) do
+    basename = Path.basename(filename, Path.extname(filename))
     case Porcelain.exec(preprocessor,
-                        executable_default_args(preprocessor) ++ [name],
+                        executable_default_args(preprocessor) ++ [basename],
                         dir: dir, out: :string) do
-      %{status: 0} -> preprocess(name, dir, remaining)
-      failure -> {:error, "Preprocessing with #{preprocessor} failed with output: #{failure.out}"}
+      %{status: 0} -> preprocess(filename, dir, remaining)
+      {:error, err} -> {:error, "Preprocessing with #{preprocessor} failed with output: #{err}"}
+    end
+  end
+  defp preprocess(filename, dir, [{:shell, command}|remaining]) do
+    case Porcelain.shell(command, dir: dir, out: :string) do
+      %{status: 0} -> preprocess(filename, dir, remaining)
+      {:error, err} -> {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}
+    end
+  end
+  defp preprocess(filename, dir, [preprocessor|remaining]) when is_function(preprocessor) do
+    case preprocessor.(dir, filename) do
+      :ok -> preprocess(filename, dir, remaining)
+      {:shell, _command} = shell -> preprocess(filename, dir, [shell|remaining])
+      {:error, _} = failure -> failure
     end
   end
 
