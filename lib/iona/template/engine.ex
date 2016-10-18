@@ -61,7 +61,7 @@ defmodule Iona.Template.Engine do
     fallback = quote line: line, do: Iona.Template.Engine.to_iodata(other)
 
     # However ignore them for the generated clauses to avoid warnings
-    quote line: -1 do
+    quote line: 0 do
       case unquote(expr) do
         {:safe, data} -> data
         bin when is_binary(bin) -> Iona.Template.Engine.escape(bin)
