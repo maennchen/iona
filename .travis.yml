@@ -12,4 +12,3 @@ otp_release:
 - 17.1
 - 17.5
 - 18.0
-script: "MIX_ENV=test mix local.hex --force && MIX_ENV=test mix do deps.get, test"
