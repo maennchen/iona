@@ -61,7 +61,7 @@ defmodule Iona.Template.Engine do
     fallback = quote line: line, do: Iona.Template.Engine.to_iodata(other)
 
     # However ignore them for the generated clauses to avoid warnings
-    quote line: -1 do
+    quote line: :keep do
       case unquote(expr) do
         {:safe, data} -> data
         bin when is_binary(bin) -> Iona.Template.Engine.escape(bin)
@@ -82,10 +82,10 @@ defmodule Iona.Template.Engine do
 
   @doc false
   def fetch_assign(assigns, key) do
-    case Dict.fetch(assigns, key) do
+    case Keyword.fetch(assigns, key) do
       :error ->
         raise ArgumentError, message: """
-        assign @#{key} not available in eex template. Available assigns: #{inspect Dict.keys(assigns)}
+        assign @#{key} not available in eex template. Available assigns: #{inspect Keyword.keys(assigns)}
         """
       {:ok, val} -> val
     end
