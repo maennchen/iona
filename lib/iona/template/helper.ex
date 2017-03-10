@@ -34,9 +34,9 @@ defmodule Iona.Template.Helper do
   end
   def escape(text) when is_binary(text) do
     @replace
-    |> Enum.reduce text, fn ({pattern, replacement}, memo) ->
+    |> Enum.reduce(text, fn ({pattern, replacement}, memo) ->
       memo |> String.replace(pattern, replacement)
-    end
+    end)
   end
 
   @doc """

@@ -9,8 +9,8 @@ defmodule Iona.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      dialyzer: [flags: "--fullpath"],
-     package: package,
-     deps: deps]
+     package: package(),
+     deps: deps()]
   end
 
   # Configuration for the OTP application
@@ -19,7 +19,7 @@ defmodule Iona.Mixfile do
   def application do
     [applications: [:logger, :briefly, :porcelain],
      mod: {Iona, []},
-     env: default_env]
+     env: default_env()]
   end
 
   # Dependencies can be Hex packages:
