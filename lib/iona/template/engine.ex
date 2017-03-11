@@ -81,6 +81,9 @@ defmodule Iona.Template.Engine do
   defp handle_assign(arg), do: arg
 
   @doc false
+  def fetch_assign(assigns, key) when is_map(assigns) do
+    fetch_assign(Map.to_list(assigns), key)
+  end
   def fetch_assign(assigns, key) do
     case Keyword.fetch(assigns, key) do
       :error ->
