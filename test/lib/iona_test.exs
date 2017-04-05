@@ -9,6 +9,8 @@ defmodule Test.Iona do
   @items_template "test/fixtures/items.tex.eex"
   @add_two_template "test/fixtures/add-two.tex.eex"
   @raw_template "test/fixtures/raw.tex.eex"
+  @image_template "test/fixtures/image.tex.eex"
+  @image "test/fixtures/latex-project-logo.jpg"
 
   test "creates an input from raw TeX" do
     assert Iona.source(@simple_content) |> Iona.Input.content == @simple_content
@@ -100,6 +102,18 @@ defmodule Test.Iona do
     |> Iona.template(path: @raw_template)
     |> read_content
     assert String.contains?(content, ~S(\item[Name] {\bf Safe}))
+  end
+
+  test "template can accept includes" do
+    template = [name: "LaTeX"]
+    |> Iona.template(path: @image_template, include: [@image])
+
+    content = template |> read_content()
+    assert String.contains?(content, "LaTeX")
+
+    out = template |> Iona.to!(:pdf)
+    assert String.starts_with?(out, "%PDF")
+    assert String.contains?(out, "/Image")
   end
 
   test "to returns a tuple with a PDF binary for a good path" do
