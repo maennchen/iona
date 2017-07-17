@@ -22,13 +22,13 @@ defmodule Iona.Processing do
     if supported_format?(format) do
       format
     else
-      raise UnsupportedFormat, message: (format |> to_string)
+      raise UnsupportedFormatError, message: (format |> to_string)
     end
   end
 
   @spec supported_format?(format :: Iona.supported_format_t) :: boolean
   defp supported_format?(format) do
-    Enum.member?(supported_formats, format)
+    Enum.member?(supported_formats(), format)
   end
 
   @spec parse_format(path :: Path.t) :: nil | atom
