@@ -133,8 +133,8 @@ defmodule Iona.Processing do
   @spec copy_includes(directory :: Path.t, [Path.t]) :: :ok | {:error, binary}
   defp copy_includes(_directory, []), do: :ok
   defp copy_includes(directory, [include|remaining]) do
-    case File.cp(include, Path.join(directory, Path.basename(include))) do
-      :ok -> copy_includes(directory, remaining)
+    case File.cp_r(include, Path.join(directory, Path.basename(include))) do
+      {:ok, _} -> copy_includes(directory, remaining)
        _ -> {:error, "Could not copy included file: #{include}"}
     end
   end
