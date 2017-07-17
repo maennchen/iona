@@ -22,13 +22,13 @@ defmodule Iona.Processing do
     if supported_format?(format) do
       format
     else
-      raise UnsupportedFormat, message: (format |> to_string)
+      raise UnsupportedFormatError, message: (format |> to_string)
     end
   end
 
   @spec supported_format?(format :: Iona.supported_format_t) :: boolean
   defp supported_format?(format) do
-    Enum.member?(supported_formats, format)
+    Enum.member?(supported_formats(), format)
   end
 
   @spec parse_format(path :: Path.t) :: nil | atom
@@ -64,7 +64,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec process_content(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec process_path(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts) :: {:ok, Iona.Document.t} | {:error, binary}
   def process_path(input, format, opts) do
     with_temp fn directory ->
       input_path = input |> Iona.Input.path
@@ -80,8 +80,10 @@ defmodule Iona.Processing do
   defp do_process(input, format, opts, path) do
     processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors, format, nil))
     if processor do
-      output_path = String.replace(path, ~r/\.tex$/, ".#{format}")
-      basename = Path.basename(path, ".tex")
+      ext = Path.extname(path)
+      {:ok, regex} = Regex.compile("\\#{ext}$")
+      output_path = String.replace(path, regex, ".#{format}")
+      basename = Path.basename(path, ext)
       dirname = Path.dirname(path)
       preprocessors = Keyword.get(opts, :preprocess, Iona.Config.preprocess)
       case copy_includes(dirname, Iona.Input.included_files(input)) do

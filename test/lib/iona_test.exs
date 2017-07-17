@@ -43,8 +43,15 @@ defmodule Test.Iona do
     assert String.starts_with?(out, "%PDF")
   end
 
-  test "template simple interpolation" do
+  test "template simple interpolation from a keyword list" do
     out = [name: "Squash", items: ~w(Acorn Summer Spaghetti)]
+    |> Iona.template(path: @items_template)
+    |> Iona.to!(:pdf)
+    assert String.starts_with?(out, "%PDF")
+  end
+
+  test "template simple interpolation from a map" do
+    out = %{name: "Squash", items: ~w(Acorn Summer Spaghetti)}
     |> Iona.template(path: @items_template)
     |> Iona.to!(:pdf)
     assert String.starts_with?(out, "%PDF")

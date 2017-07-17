@@ -1,6 +1,6 @@
 defprotocol Iona.Input do
 
-  @opaque t :: any
+  @type t :: any
 
   @spec path?(input :: t) :: boolean
   def path?(input)

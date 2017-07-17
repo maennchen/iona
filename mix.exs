@@ -4,13 +4,13 @@ defmodule Iona.Mixfile do
   def project do
     [app: :iona,
      version: "0.2.1",
-     elixir: "~> 1.0",
+     elixir: "~> 1.4",
      source_url: "https://github.com/CargoSense/iona",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      dialyzer: [flags: "--fullpath"],
-     package: package,
-     deps: deps]
+     package: package(),
+     deps: deps()]
   end
 
   # Configuration for the OTP application
@@ -19,7 +19,7 @@ defmodule Iona.Mixfile do
   def application do
     [applications: [:logger, :briefly, :porcelain],
      mod: {Iona, []},
-     env: default_env]
+     env: default_env()]
   end
 
   # Dependencies can be Hex packages:
