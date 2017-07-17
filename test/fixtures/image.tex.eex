@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{graphicx}
+
+\begin{document}
+
+Hello, <%= @name %>.
+
+\includegraphics{latex-project-logo}
+
+\end{document}

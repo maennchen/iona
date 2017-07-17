@@ -31,6 +31,7 @@ defmodule Iona do
   @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Template.t
   def template(assigns, criteria) when is_list(criteria) do
     template = %Iona.Template{body_path: Keyword.get(criteria, :path),
+                              include: Keyword.get(criteria, :include, []),
                               helpers: Keyword.get(criteria, :helpers, [])}
     case assigns |> Iona.Template.fill(template) do
       {:ok, template} -> template
