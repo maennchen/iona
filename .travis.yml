@@ -1,5 +1,5 @@
 language: elixir
-elixir: 1.1.0-beta
+elixir: 1.4.5
 sudo: false
 notifications:
   recipients:
@@ -9,7 +9,6 @@ addons:
     packages:
     - texlive-latex-base
 otp_release:
-- 17.1
-- 17.5
-- 18.0
+- 19.3
+- 20.0
 script: "MIX_ENV=test mix local.hex --force && MIX_ENV=test mix do deps.get, test"
