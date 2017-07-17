@@ -6,7 +6,7 @@ defmodule Iona.Mixfile do
      version: "0.3.0",
      elixir: "~> 1.4",
      source_url: "https://github.com/CargoSense/iona",
-     build_embedded: Mix.env == :prod,
+     build_embeddedalc: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      dialyzer: [flags: "--fullpath"],
      package: package(),
@@ -41,7 +41,7 @@ defmodule Iona.Mixfile do
   defp package do
     [description: "Document generation using LaTeX",
      files: ["lib", "config", "mix.exs", "README*", "LICENSE"],
-     contributors: ["Bruce Williams"],
+     maintainers: ["Bruce Williams"],
      licenses: ["Apache 2"],
      links: %{github: "https://github.com/CargoSense/iona"}]
   end
