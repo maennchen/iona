@@ -3,7 +3,7 @@ defmodule Iona.Mixfile do
 
   def project do
     [app: :iona,
-     version: "0.2.1",
+     version: "0.3.0",
      elixir: "~> 1.4",
      source_url: "https://github.com/CargoSense/iona",
      build_embedded: Mix.env == :prod,

@@ -28,7 +28,7 @@ Add as a dependency to your `mix.exs`:
 ```elixir
 def deps do
   [
-    iona: "~> 0.2"
+    iona: "~> 0.3"
   ]
 end
 ```
