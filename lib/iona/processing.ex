@@ -13,7 +13,8 @@ defmodule Iona.Processing do
   @nonstopmode "-interaction=nonstopmode"
   @executable_default_args %{
     "latex" => @nonstopmode,
-    "pdflatex" => @nonstopmode
+    "pdflatex" => @nonstopmode,
+    "xelatex" => @nonstopmode,
   }
 
   @spec to_format(path :: Path.t) :: Iona.supported_format_t | no_return
