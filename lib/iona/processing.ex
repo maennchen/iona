@@ -77,7 +77,7 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec do_process(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts, path :: Path.t) :: {:ok, Iona.Document.t} | {:error, binary}
+  @spec do_process(input :: Iona.Input, format :: Iona.supported_format_t, opts :: Iona.processing_opts, path :: Path.t) :: {:ok, Iona.Document.t} | {:prepared, Path.t} | {:error, binary}
   defp do_process(input, format, opts, path) do
     processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors, format, nil))
     if processor do
@@ -89,15 +89,23 @@ defmodule Iona.Processing do
       preprocessors = Keyword.get(opts, :preprocess, Iona.Config.preprocess)
       case copy_includes(dirname, Iona.Input.included_files(input)) do
         :ok ->
-          case preprocess(Path.basename(path), dirname, preprocessors) do
-            :ok ->
-              case Porcelain.exec(processor,
-                                  executable_default_args(processor) ++ [basename],
-                                  dir: dirname, out: :string) do
-                %{status: 0} -> {:ok, %Iona.Document{format: format, output_path: output_path}}
-                failure -> {:error, "Processing failed with output: #{failure.out}"}
-              end
-            err -> err
+          if opts[:prepare] do
+            File.cp_r(dirname, opts[:prepare])
+            commands = for command <- preprocessors ++ [processor], is_binary(command) do
+              command <> " " <> basename
+            end
+            {:prepared, opts[:prepare], commands}
+          else
+            case preprocess(Path.basename(path), dirname, preprocessors) do
+              :ok ->
+                case Porcelain.exec(processor,
+                      executable_default_args(processor) ++ [basename],
+                      dir: dirname, out: :string) do
+                  %{status: 0} -> {:ok, %Iona.Document{format: format, output_path: output_path}}
+                  failure -> {:error, "Processing failed with output: #{failure.out}"}
+                end
+              err -> err
+            end
           end
         other -> other
       end

@@ -11,6 +11,8 @@ Document generation from Elixir, using LaTeX.
   TeX processors for different formats.
 * Built-in support for EEx templating with automatic escaping and a custom helpers
 * Preprocessing support (multiple runs for bibliographies, etc)
+* Optionally generating a prepared directory with a `build.sh` script for final
+  processing.
 
 ## Prerequisites
 
@@ -33,7 +35,8 @@ def deps do
 end
 ```
 
-Install it with `mix deps.get` and don't forget to add it to your applications list:
+Install it with `mix deps.get` and don't forget to add it to your applications list if using
+an older version of Elixir:
 
 ```elixir
 def application do
@@ -77,6 +80,16 @@ Define the prepocessing pipeline:
 Iona.source(path: "academic.tex")
 |> Iona.write!("/path/to/academic.pdf",
                preprocess: ~w(latex bibtex latex))
+```
+
+To generate a directory with a build script that can be run
+to finalize the build, use `:prepare`:
+
+```elixir
+Iona.source(path: "academic.tex")
+|> Iona.write!("/path/to/academic.pdf",
+               preprocess: ~w(latex bibtex latex),
+               prepare: "/path/to/prepared/directory")
 ```
 
 Want to get the raw document content as a binary? Use `to`:

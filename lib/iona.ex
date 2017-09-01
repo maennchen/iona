@@ -91,7 +91,8 @@ defmodule Iona do
 
   @type processing_opts :: [
     {:preprocess, [executable_t]},
-    {:processor, executable_t}
+    {:processor, executable_t},
+    {:prepare, Path.t},
   ]
 
   @doc """
@@ -166,7 +167,10 @@ defmodule Iona do
   def write(input, path, opts \\ []) do
     result = input |> Iona.Processing.process(path |> Iona.Processing.to_format, opts)
     case result do
-      {:ok, document} -> Iona.Document.write(document, path)
+      {:ok, document} ->
+        Iona.Document.write(document, path)
+      {:prepared, directory, commands} ->
+        write_build_script(directory, commands)
       other -> other
     end
   end
@@ -194,6 +198,22 @@ defmodule Iona do
       :ok -> :ok
       {:error, err} -> raise Iona.Processing.ProcessingError, message: err
     end
+  end
+
+  @spec write_build_script(Path.t, [String.t]) :: :ok | {:error, File.posix}
+  defp write_build_script(directory, commands) do
+    script = Path.join(directory, "build.sh")
+    with :ok <- File.write(script, script_content(commands)) do
+      File.chmod(script, 0o755)
+    end
+  end
+
+  @spec script_content([String.t]) :: iodata
+  defp script_content(commands) do
+    [
+      "#!/bin/sh\n",
+      Enum.intersperse(commands, " && \\\n")
+    ]
   end
 
 end
