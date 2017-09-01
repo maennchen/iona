@@ -91,7 +91,8 @@ defmodule Iona do
 
   @type processing_opts :: [
     {:preprocess, [executable_t]},
-    {:processor, executable_t}
+    {:processor, executable_t},
+    {:prepare, Path.t},
   ]
 
   @doc """
