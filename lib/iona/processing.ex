@@ -91,17 +91,10 @@ defmodule Iona.Processing do
         :ok ->
           if opts[:prepare] do
             File.cp_r(dirname, opts[:prepare])
-            script = Path.join(opts[:prepare], "build.sh")
-            File.write!(
-              script,
-              [
-                "#!/bin/sh\n\n",
-                Enum.map(preprocessors ++ [processor], &"#{&1} #{basename}")
-                |> Enum.join(" && \\\n")
-              ]
-            )
-            File.chmod!(script, 0o755)
-            {:prepared, opts[:prepare]}
+            commands = for command <- preprocessors ++ [processor], is_binary(command) do
+              command <> " " <> basename
+            end
+            {:prepared, opts[:prepare], commands}
           else
             case preprocess(Path.basename(path), dirname, preprocessors) do
               :ok ->
