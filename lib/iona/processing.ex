@@ -102,7 +102,7 @@ defmodule Iona.Processing do
                       executable_default_args(processor) ++ [basename],
                       dir: dirname, out: :string) do
                   %{status: 0} -> {:ok, %Iona.Document{format: format, output_path: output_path}}
-                  failure -> {:error, "Processing failed with output: #{failure.out}"}
+                  {:error, err} -> {:error, "Processing failed with output: #{err}"}
                 end
               err -> err
             end
