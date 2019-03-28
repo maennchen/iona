@@ -4,41 +4,64 @@ defmodule Iona.Template.Engine do
 
   @moduledoc false
 
-  use EEx.Engine
+  @behaviour EEx.Engine
 
   defdelegate escape(value), to: Iona.Template.Helper
 
-  @doc false
-  def handle_body(body), do: body
-
-  @doc false
-  def handle_text(buffer, text) do
-    quote do
-      {:safe, [unquote(unwrap(buffer))|unquote(text)]}
-    end
+  @impl true
+  def init(_opts) do
+    %{
+      iodata: [],
+      dynamic: [],
+      vars_count: 0
+    }
   end
 
-  @doc false
-  def handle_expr(buffer, "=", expr) do
-    line   = line_from_expr(expr)
-    expr   = expr(expr)
-    buffer = unwrap(buffer)
-    {:safe, quote do
-       tmp1 = unquote(buffer)
-       [tmp1|unquote(to_safe(expr, line))]
-    end}
+  @impl true
+  def handle_begin(state) do
+    %{state | iodata: [], dynamic: []}
   end
 
-  @doc false
-  def handle_expr(buffer, "", expr) do
-    expr   = expr(expr)
-    buffer = unwrap(buffer)
+  @impl true
+  def handle_end(quoted) do
+    handle_body(quoted)
+  end
 
-    quote do
-      tmp2 = unquote(buffer)
-      unquote(expr)
-      tmp2
-    end
+  @impl true
+  def handle_body(state) do
+    %{iodata: iodata, dynamic: dynamic} = state
+    safe = {:safe, Enum.reverse(iodata)}
+    {:__block__, [], Enum.reverse([safe | dynamic])}
+  end
+
+  @impl true
+  def handle_text(state, text) do
+    %{iodata: iodata} = state
+    %{state | iodata: [text | iodata]}
+  end
+
+  @impl true
+  def handle_expr(state, "=", ast) do
+    line   = line_from_expr(ast)
+    ast = traverse(ast)
+    %{iodata: iodata, dynamic: dynamic, vars_count: vars_count} = state
+    var = Macro.var(:"arg#{vars_count}", __MODULE__)
+    ast = quote do: unquote(var) = unquote(to_safe(ast, line))
+    %{state | dynamic: [ast | dynamic], iodata: [var | iodata], vars_count: vars_count + 1}
+  end
+
+  def handle_expr(state, "", ast) do
+    ast = traverse(ast)
+    %{dynamic: dynamic} = state
+    %{state | dynamic: [ast | dynamic]}
+  end
+
+  def handle_expr(state, marker, ast) do
+    EEx.Engine.handle_expr(state, marker, ast)
+  end
+
+  defp traverse(expr) do
+    Macro.prewalk(expr, &handle_assign/1)
   end
 
   defp line_from_expr({_, meta, _}) when is_list(meta), do: Keyword.get(meta, :line)
@@ -70,9 +93,6 @@ defmodule Iona.Template.Engine do
     end
   end
 
-  defp expr(expr) do
-    Macro.prewalk(expr, &handle_assign/1)
-  end
   defp handle_assign({:@, meta, [{name, _, atom}]}) when is_atom(name) and is_atom(atom) do
     quote line: meta[:line] || 0 do
       Iona.Template.Engine.fetch_assign(var!(assigns), unquote(name))
@@ -93,9 +113,6 @@ defmodule Iona.Template.Engine do
       {:ok, val} -> val
     end
   end
-
-  defp unwrap({:safe, value}), do: value
-  defp unwrap(value), do: value
 
   def to_iodata({:safe, str}) do
     str |> to_string
