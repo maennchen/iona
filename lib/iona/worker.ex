@@ -9,7 +9,7 @@ defmodule Iona.Worker do
   end
 
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [name: __MODULE__])
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   ## Callbacks
@@ -20,12 +20,12 @@ defmodule Iona.Worker do
   end
 
   @impl GenServer
-  def handle_call(:pop, _from, [h|t]) do
+  def handle_call(:pop, _from, [h | t]) do
     {:reply, h, t}
   end
 
   @impl GenServer
   def handle_cast({:push, item}, state) do
-    {:noreply, [item|state]}
+    {:noreply, [item | state]}
   end
 end

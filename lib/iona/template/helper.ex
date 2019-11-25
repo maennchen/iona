@@ -32,9 +32,10 @@ defmodule Iona.Template.Helper do
   def escape({:safe, text}) do
     text
   end
+
   def escape(text) when is_binary(text) do
     @replace
-    |> Enum.reduce(text, fn ({pattern, replacement}, memo) ->
+    |> Enum.reduce(text, fn {pattern, replacement}, memo ->
       memo |> String.replace(pattern, replacement)
     end)
   end
@@ -43,5 +44,4 @@ defmodule Iona.Template.Helper do
   Mark text as a string to be inserted raw and unescaped
   """
   def raw(text), do: {:safe, text}
-
 end

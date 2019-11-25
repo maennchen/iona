@@ -1,7 +1,6 @@
 # Taken in part from the Phoenix HTML project,
 # https://github.com/phoenixframework/phoenix_html
 defmodule Iona.Template.Engine do
-
   @moduledoc false
 
   @behaviour EEx.Engine
@@ -42,7 +41,7 @@ defmodule Iona.Template.Engine do
 
   @impl true
   def handle_expr(state, "=", ast) do
-    line   = line_from_expr(ast)
+    line = line_from_expr(ast)
     ast = traverse(ast)
     %{iodata: iodata, dynamic: dynamic, vars_count: vars_count} = state
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
@@ -68,7 +67,8 @@ defmodule Iona.Template.Engine do
   defp line_from_expr(_), do: nil
 
   # We can do the work at compile time
-  defp to_safe(literal, _line) when is_binary(literal) or is_atom(literal) or is_number(literal) do
+  defp to_safe(literal, _line)
+       when is_binary(literal) or is_atom(literal) or is_number(literal) do
     to_iodata(literal)
   end
 
@@ -98,33 +98,42 @@ defmodule Iona.Template.Engine do
       Iona.Template.Engine.fetch_assign(var!(assigns), unquote(name))
     end
   end
+
   defp handle_assign(arg), do: arg
 
   @doc false
   def fetch_assign(assigns, key) when is_map(assigns) do
     fetch_assign(Map.to_list(assigns), key)
   end
+
   def fetch_assign(assigns, key) do
     case Keyword.fetch(assigns, key) do
       :error ->
-        raise ArgumentError, message: """
-        assign @#{key} not available in eex template. Available assigns: #{inspect Keyword.keys(assigns)}
-        """
-      {:ok, val} -> val
+        raise ArgumentError,
+          message: """
+          assign @#{key} not available in eex template. Available assigns: #{
+            inspect(Keyword.keys(assigns))
+          }
+          """
+
+      {:ok, val} ->
+        val
     end
   end
 
   def to_iodata({:safe, str}) do
     str |> to_string
   end
-  def to_iodata([h|t]) do
-    [to_iodata(h)|to_iodata(t)]
+
+  def to_iodata([h | t]) do
+    [to_iodata(h) | to_iodata(t)]
   end
+
   def to_iodata([]) do
     []
   end
+
   def to_iodata(value) do
     value |> to_string |> escape
   end
-
 end
