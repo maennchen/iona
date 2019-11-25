@@ -14,12 +14,18 @@ defmodule Iona.Worker do
 
   ## Callbacks
 
+  @impl GenServer
+  def init(init_arg) do
+    {:ok, init_arg}
+  end
+
+  @impl GenServer
   def handle_call(:pop, _from, [h|t]) do
     {:reply, h, t}
   end
 
+  @impl GenServer
   def handle_cast({:push, item}, state) do
     {:noreply, [item|state]}
   end
-
 end
