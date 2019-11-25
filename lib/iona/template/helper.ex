@@ -40,6 +40,10 @@ defmodule Iona.Template.Helper do
     end)
   end
 
+  def escape_to_iodata(text) do
+    escape(text)
+  end
+
   @doc """
   Mark text as a string to be inserted raw and unescaped
   """

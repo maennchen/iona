@@ -5,7 +5,18 @@ defmodule Iona.Template.Engine do
 
   @behaviour EEx.Engine
 
-  defdelegate escape(value), to: Iona.Template.Helper
+  @anno (if :erlang.system_info(:otp_release) >= '19' do
+           [generated: true]
+         else
+           [line: -1]
+         end)
+
+  @doc """
+  Encodes the HTML templates to iodata.
+  """
+  def encode_to_iodata!({:safe, body}), do: body
+  def encode_to_iodata!(body) when is_binary(body), do: Iona.Template.Helper.escape(body)
+  def encode_to_iodata!(other), do: Iona.Template.Safe.to_iodata(other)
 
   @impl true
   def init(_opts) do
@@ -41,11 +52,10 @@ defmodule Iona.Template.Engine do
 
   @impl true
   def handle_expr(state, "=", ast) do
-    line = line_from_expr(ast)
     ast = traverse(ast)
     %{iodata: iodata, dynamic: dynamic, vars_count: vars_count} = state
     var = Macro.var(:"arg#{vars_count}", __MODULE__)
-    ast = quote do: unquote(var) = unquote(to_safe(ast, line))
+    ast = quote do: unquote(var) = unquote(to_safe(ast))
     %{state | dynamic: [ast | dynamic], iodata: [var | iodata], vars_count: vars_count + 1}
   end
 
@@ -59,8 +69,10 @@ defmodule Iona.Template.Engine do
     EEx.Engine.handle_expr(state, marker, ast)
   end
 
-  defp traverse(expr) do
-    Macro.prewalk(expr, &handle_assign/1)
+  ## Safe conversion
+
+  defp to_safe(ast) do
+    to_safe(ast, line_from_expr(ast))
   end
 
   defp line_from_expr({_, meta, _}) when is_list(meta), do: Keyword.get(meta, :line)
@@ -69,71 +81,61 @@ defmodule Iona.Template.Engine do
   # We can do the work at compile time
   defp to_safe(literal, _line)
        when is_binary(literal) or is_atom(literal) or is_number(literal) do
-    to_iodata(literal)
+    Iona.Template.Safe.to_iodata(literal)
   end
 
   # We can do the work at runtime
   defp to_safe(literal, line) when is_list(literal) do
-    quote line: line, do: Iona.Template.Engine.to_iodata(unquote(literal))
+    quote line: line, do: Iona.Template.Safe.List.to_iodata(unquote(literal))
   end
 
-  # We need to check at runtime and we do so by
-  # optimizing common cases.
+  # We need to check at runtime and we do so by optimizing common cases.
   defp to_safe(expr, line) do
-    # Keep stacktraces for protocol dispatch...
-    fallback = quote line: line, do: Iona.Template.Engine.to_iodata(other)
+    # Keep stacktraces for protocol dispatch and coverage
+    safe_return = quote line: line, do: data
+    bin_return = quote line: line, do: Iona.Template.Helper.escape_to_iodata(bin)
+    other_return = quote line: line, do: Iona.Template.Safe.to_iodata(other)
 
     # However ignore them for the generated clauses to avoid warnings
-    quote line: :keep do
+    quote @anno do
       case unquote(expr) do
-        {:safe, data} -> data
-        bin when is_binary(bin) -> Iona.Template.Engine.escape(bin)
-        other -> unquote(fallback)
+        {:safe, data} -> unquote(safe_return)
+        bin when is_binary(bin) -> unquote(bin_return)
+        other -> unquote(other_return)
       end
     end
   end
 
+  ## Traversal
+
+  defp traverse(expr) do
+    Macro.prewalk(expr, &handle_assign/1)
+  end
+
   defp handle_assign({:@, meta, [{name, _, atom}]}) when is_atom(name) and is_atom(atom) do
     quote line: meta[:line] || 0 do
-      Iona.Template.Engine.fetch_assign(var!(assigns), unquote(name))
+      Iona.Template.Engine.fetch_assign!(var!(assigns), unquote(name))
     end
   end
 
   defp handle_assign(arg), do: arg
 
   @doc false
-  def fetch_assign(assigns, key) when is_map(assigns) do
-    fetch_assign(Map.to_list(assigns), key)
-  end
-
-  def fetch_assign(assigns, key) do
-    case Keyword.fetch(assigns, key) do
-      :error ->
-        raise ArgumentError,
-          message: """
-          assign @#{key} not available in eex template. Available assigns: #{
-            inspect(Keyword.keys(assigns))
-          }
-          """
-
+  def fetch_assign!(assigns, key) do
+    case Access.fetch(assigns, key) do
       {:ok, val} ->
         val
+
+      :error ->
+        raise ArgumentError, """
+        assign @#{key} not available in eex template.
+
+        Please make sure all proper assigns have been set. If this
+        is a child template, ensure assigns are given explicitly by
+        the parent template as they are not automatically forwarded.
+
+        Available assigns: #{inspect(Enum.map(assigns, &elem(&1, 0)))}
+        """
     end
-  end
-
-  def to_iodata({:safe, str}) do
-    str |> to_string
-  end
-
-  def to_iodata([h | t]) do
-    [to_iodata(h) | to_iodata(t)]
-  end
-
-  def to_iodata([]) do
-    []
-  end
-
-  def to_iodata(value) do
-    value |> to_string |> escape
   end
 end
