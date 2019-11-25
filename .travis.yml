@@ -1,6 +1,27 @@
 language: elixir
-elixir: 1.4
 sudo: false
+matrix:
+  include:
+    - elixir: 1.5
+      otp_release: 19.3
+    - elixir: 1.5
+      otp_release: 20.3
+    - elixir: 1.6
+      otp_release: 19.3
+    - elixir: 1.6
+      otp_release: 20.3
+    - elixir: 1.6
+      otp_release: 21.0
+    - elixir: 1.7
+      otp_release: 19.3
+    - elixir: 1.7
+      otp_release: 20.3
+    - elixir: 1.7
+      otp_release: 21.0
+    - elixir: 1.8
+      otp_release: 21.0
+    - elixir: 1.9
+      otp_release: 21.0
 notifications:
   recipients:
   - bruce.williams@cargosense.com
@@ -8,6 +29,3 @@ addons:
   apt:
     packages:
     - texlive-latex-base
-otp_release:
-- 19.3
-- 20.0

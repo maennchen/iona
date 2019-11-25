@@ -5,7 +5,7 @@ defmodule Iona.Mixfile do
     [
       app: :iona,
       version: "0.4.0",
-      elixir: "~> 1.4",
+      elixir: "~> 1.5.1 or ~> 1.6",
       source_url: "https://github.com/CargoSense/iona",
       build_embeddedalc: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
