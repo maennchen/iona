@@ -12,5 +12,4 @@ defmodule Test.Iona.Helper do
   test "escape backslashes" do
     assert Iona.Template.Helper.escape("this \\ that") == ~S(this \textbackslash{} that)
   end
-
 end

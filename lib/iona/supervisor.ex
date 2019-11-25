@@ -11,6 +11,7 @@ defmodule Iona.Supervisor do
     children = [
       worker(Iona.Worker, [])
     ]
+
     supervise(children, strategy: :one_for_one)
   end
 end

@@ -12,7 +12,7 @@ defmodule Iona.Config do
   The helpers
   """
   def helpers do
-    Application.get_env(:iona, :helpers, []) |> List.wrap
+    Application.get_env(:iona, :helpers, []) |> List.wrap()
   end
 
   @doc """
@@ -21,5 +21,4 @@ defmodule Iona.Config do
   def preprocess do
     Application.get_env(:iona, :preprocess, [])
   end
-
 end

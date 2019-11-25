@@ -17,10 +17,10 @@ defmodule Iona do
   ```
   """
   @type template_opts :: [
-    {:path, Path.t}
-  ]
+          {:path, Path.t()}
+        ]
 
-  @spec template(assigns :: Keyword.t, criteria :: eex_tex_t) :: Iona.Template.t
+  @spec template(assigns :: Keyword.t(), criteria :: eex_tex_t) :: Iona.Template.t()
   def template(assigns, criteria) when is_binary(criteria) do
     case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
       {:ok, template} -> template
@@ -28,11 +28,14 @@ defmodule Iona do
     end
   end
 
-  @spec template(assigns :: Keyword.t, criteria :: template_opts) :: Iona.Template.t
+  @spec template(assigns :: Keyword.t(), criteria :: template_opts) :: Iona.Template.t()
   def template(assigns, criteria) when is_list(criteria) do
-    template = %Iona.Template{body_path: Keyword.get(criteria, :path),
-                              include: Keyword.get(criteria, :include, []),
-                              helpers: Keyword.get(criteria, :helpers, [])}
+    template = %Iona.Template{
+      body_path: Keyword.get(criteria, :path),
+      include: Keyword.get(criteria, :include, []),
+      helpers: Keyword.get(criteria, :helpers, [])
+    }
+
     case assigns |> Iona.Template.fill(template) do
       {:ok, template} -> template
       other -> other
@@ -70,18 +73,21 @@ defmodule Iona do
   installation.
   """
   @type source_opts :: [
-    {:path, Path.t},
-    {:include, [Path.t]}
-  ]
+          {:path, Path.t()},
+          {:include, [Path.t()]}
+        ]
 
-  @spec source(criteria :: binary) :: Iona.Source.t
+  @spec source(criteria :: binary) :: Iona.Source.t()
   def source(criteria) when is_binary(criteria) do
     %Iona.Source{content: criteria}
   end
-  @spec source(criteria :: source_opts) :: Iona.Source.t
+
+  @spec source(criteria :: source_opts) :: Iona.Source.t()
   def source(criteria) when is_list(criteria) do
-    %Iona.Source{path: Keyword.get(criteria, :path, nil),
-                 include: Keyword.get(criteria, :include, [])}
+    %Iona.Source{
+      path: Keyword.get(criteria, :path, nil),
+      include: Keyword.get(criteria, :include, [])
+    }
   end
 
   @type supported_format_t :: atom
@@ -90,10 +96,10 @@ defmodule Iona do
   @type executable_t :: binary
 
   @type processing_opts :: [
-    {:preprocess, [executable_t]},
-    {:processor, executable_t},
-    {:prepare, Path.t},
-  ]
+          {:preprocess, [executable_t]},
+          {:processor, executable_t},
+          {:prepare, Path.t()}
+        ]
 
   @doc """
   Generate a formatted document as a string.
@@ -112,12 +118,14 @@ defmodule Iona do
   |> Iona.to(:pdf, processor: "xetex")
   ```
   """
-  @spec to(input :: Iona.Input.t,
-           format :: supported_format_t,
-           opts :: processing_opts) :: {:ok, binary} | {:error, binary}
+  @spec to(
+          input :: Iona.Input.t(),
+          format :: supported_format_t,
+          opts :: processing_opts
+        ) :: {:ok, binary} | {:error, binary}
   def to(input, format, opts \\ []) do
     case input |> Iona.Processing.process(format, opts) do
-      {:ok, document} -> document |> Iona.Document.read
+      {:ok, document} -> document |> Iona.Document.read()
       other -> other
     end
   end
@@ -135,9 +143,11 @@ defmodule Iona do
   If writing to a file, see `write/3` and `write/4`, as they are both
   shorter to type and have better performance characteristics.
   """
-  @spec to!(input :: Iona.Input.t,
-            format :: supported_format_t,
-            opts :: processing_opts) :: binary
+  @spec to!(
+          input :: Iona.Input.t(),
+          format :: supported_format_t,
+          opts :: processing_opts
+        ) :: binary
   def to!(input, format, opts \\ []) do
     case to(input, format, opts) do
       {:ok, result} -> result
@@ -163,15 +173,20 @@ defmodule Iona do
   processor: "xetex")
   ```
   """
-  @spec write(input :: Iona.Input.t, path :: Path.t, opts :: processing_opts) :: :ok | {:error, term}
+  @spec write(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) ::
+          :ok | {:error, term}
   def write(input, path, opts \\ []) do
-    result = input |> Iona.Processing.process(path |> Iona.Processing.to_format, opts)
+    result = input |> Iona.Processing.process(path |> Iona.Processing.to_format(), opts)
+
     case result do
       {:ok, document} ->
         Iona.Document.write(document, path)
+
       {:prepared, directory, commands} ->
         write_build_script(directory, commands)
-      other -> other
+
+      other ->
+        other
     end
   end
 
@@ -192,7 +207,8 @@ defmodule Iona do
   |> Iona.write!("/path/to/document.pdf", processor: "xetex")
   ```
   """
-  @spec write!(input :: Iona.Input.t, path :: Path.t, opts :: processing_opts) :: :ok | no_return
+  @spec write!(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) ::
+          :ok | no_return
   def write!(input, path, opts \\ []) do
     case write(input, path, opts) do
       :ok -> :ok
@@ -200,20 +216,20 @@ defmodule Iona do
     end
   end
 
-  @spec write_build_script(Path.t, [String.t]) :: :ok | {:error, File.posix}
+  @spec write_build_script(Path.t(), [String.t()]) :: :ok | {:error, File.posix()}
   defp write_build_script(directory, commands) do
     script = Path.join(directory, "build.sh")
+
     with :ok <- File.write(script, script_content(commands)) do
       File.chmod(script, 0o755)
     end
   end
 
-  @spec script_content([String.t]) :: iodata
+  @spec script_content([String.t()]) :: iodata
   defp script_content(commands) do
     [
       "#!/bin/sh\n",
       Enum.intersperse(commands, " && \\\n")
     ]
   end
-
 end
