@@ -19,7 +19,6 @@ defmodule Iona do
   @type template_opts :: [
           {:path, Path.t()}
         ]
-
   @spec template(assigns :: Keyword.t(), criteria :: eex_tex_t) :: Iona.Template.t()
   def template(assigns, criteria) when is_binary(criteria) do
     case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
