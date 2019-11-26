@@ -4,7 +4,7 @@ defmodule Iona.Mixfile do
   def project do
     [
       app: :iona,
-      version: "0.4.0",
+      version: "0.4.1",
       elixir: "~> 1.5.1 or ~> 1.6",
       source_url: "https://github.com/jshmrtn/iona",
       build_embeddedalc: Mix.env() == :prod,
