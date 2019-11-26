@@ -45,8 +45,13 @@ defmodule Test.Iona do
   end
 
   test "to returns a tuple with a PDF binary from content" do
-    {:ok, out} = @simple_content |> Iona.source() |> Iona.to(:pdf)
+    assert {:ok, out} = @simple_content |> Iona.source() |> Iona.to(:pdf)
     assert String.starts_with?(out, "%PDF")
+  end
+
+  test "to returns error with invalid command" do
+    assert {:error, "Processing failed with output: Command not found: invlid_command_name"} =
+             @simple_content |> Iona.source() |> Iona.to(:pdf, processor: "invlid_command_name")
   end
 
   test "template simple interpolation from a keyword list" do
