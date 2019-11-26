@@ -22,9 +22,6 @@ matrix:
       otp_release: 21.0
     - elixir: 1.9
       otp_release: 21.0
-notifications:
-  recipients:
-  - bruce.williams@cargosense.com
 addons:
   apt:
     packages:

@@ -1,6 +1,6 @@
 Iona
 ====
-[![Build Status](https://travis-ci.org/CargoSense/iona.svg?branch=master)](https://travis-ci.org/CargoSense/iona)
+[![Build Status](https://travis-ci.com/jshmrtn/iona.svg?branch=master)](https://travis-ci.com/jshmrtn/iona)
 
 Document generation from Elixir, using LaTeX.
 

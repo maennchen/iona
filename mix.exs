@@ -6,7 +6,7 @@ defmodule Iona.Mixfile do
       app: :iona,
       version: "0.4.0",
       elixir: "~> 1.5.1 or ~> 1.6",
-      source_url: "https://github.com/CargoSense/iona",
+      source_url: "https://github.com/jshmrtn/iona",
       build_embeddedalc: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       dialyzer: [flags: "--fullpath"],
@@ -46,7 +46,7 @@ defmodule Iona.Mixfile do
       files: ["lib", "config", "mix.exs", "README*", "LICENSE"],
       maintainers: ["Bruce Williams"],
       licenses: ["Apache 2"],
-      links: %{github: "https://github.com/CargoSense/iona"}
+      links: %{github: "https://github.com/jshmrtn/iona"}
     ]
   end
 
