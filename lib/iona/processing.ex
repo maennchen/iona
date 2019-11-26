@@ -133,7 +133,7 @@ defmodule Iona.Processing do
                        out: :string
                      ) do
                   %{status: 0} -> {:ok, %Iona.Document{format: format, output_path: output_path}}
-                  failure -> {:error, "Processing failed with output: #{failure.out}"}
+                  {:error, err} -> {:error, "Processing failed with output: #{err}"}
                 end
 
               err ->
