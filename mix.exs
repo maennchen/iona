@@ -9,9 +9,9 @@ defmodule Iona.Mixfile do
       source_url: "https://github.com/jshmrtn/iona",
       build_embeddedalc: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      dialyzer: [flags: "--fullpath"],
       package: package(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"]
     ]
   end
 
@@ -20,7 +20,7 @@ defmodule Iona.Mixfile do
   # Type `mix help compile.app` for more information
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :eex],
       env: default_env()
     ]
   end
@@ -38,7 +38,8 @@ defmodule Iona.Mixfile do
     [
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:briefly, "~> 0.3"},
-      {:porcelain, "~> 2.0"}
+      {:porcelain, "~> 2.0"},
+      {:dialyxir, "~> 1.0-rc", only: [:dev], runtime: false}
     ]
   end
 

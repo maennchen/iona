@@ -16,7 +16,7 @@ defmodule Iona.Processing do
     "xelatex" => @nonstopmode
   }
 
-  @spec to_format(path :: Path.t()) :: Iona.supported_format_t() | no_return
+  @spec to_format(path :: Path.t()) :: Iona.supported_format_t()
   def to_format(path) do
     format = path |> parse_format
 
@@ -49,7 +49,7 @@ defmodule Iona.Processing do
           input :: Iona.Input.t(),
           format :: Iona.supported_format_t(),
           opts :: Iona.processing_opts()
-        ) :: {:ok, Iona.Document.t()} | {:error, binary}
+        ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t(), String.t()} | {:error, binary}
   def process(input, format, opts \\ []) do
     if Iona.Input.path?(input) do
       input |> process_path(format, opts)
@@ -62,7 +62,7 @@ defmodule Iona.Processing do
           input :: Iona.Input,
           format :: Iona.supported_format_t(),
           opts :: Iona.processing_opts()
-        ) :: {:ok, Iona.Document.t()} | {:error, binary}
+        ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t(), String.t()} | {:error, binary}
   def process_content(input, format, opts) do
     with_temp(fn directory ->
       path = Path.join(directory, "document.tex")
@@ -78,7 +78,7 @@ defmodule Iona.Processing do
           input :: Iona.Input,
           format :: Iona.supported_format_t(),
           opts :: Iona.processing_opts()
-        ) :: {:ok, Iona.Document.t()} | {:error, binary}
+        ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t(), String.t()} | {:error, binary}
   def process_path(input, format, opts) do
     with_temp(fn directory ->
       input_path = input |> Iona.Input.path()
@@ -100,7 +100,7 @@ defmodule Iona.Processing do
           format :: Iona.supported_format_t(),
           opts :: Iona.processing_opts(),
           path :: Path.t()
-        ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t()} | {:error, binary}
+        ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t(), String.t()} | {:error, binary}
   defp do_process(input, format, opts, path) do
     processor = Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors(), format, nil))
 
@@ -115,14 +115,18 @@ defmodule Iona.Processing do
       case copy_includes(dirname, Iona.Input.included_files(input)) do
         :ok ->
           if opts[:prepare] do
-            File.cp_r(dirname, opts[:prepare])
+            case File.cp_r(dirname, opts[:prepare]) do
+              {:ok, _} ->
+                commands =
+                  for command <- preprocessors ++ [processor], is_binary(command) do
+                    command <> " " <> basename
+                  end
 
-            commands =
-              for command <- preprocessors ++ [processor], is_binary(command) do
-                command <> " " <> basename
-              end
+                {:prepared, opts[:prepare], commands}
 
-            {:prepared, opts[:prepare], commands}
+              {:error, _, error} ->
+                {:error, error}
+            end
           else
             case preprocess(Path.basename(path), dirname, preprocessors) do
               :ok ->
@@ -132,17 +136,24 @@ defmodule Iona.Processing do
                        dir: dirname,
                        out: :string
                      ) do
-                  %{status: 0} -> {:ok, %Iona.Document{format: format, output_path: output_path}}
-                  {:error, err} -> {:error, "Processing failed with output: #{err}"}
+                  %{status: 0} ->
+                    {:ok, %Iona.Document{format: format, output_path: output_path}}
+
+                  %{status: status, err: err} when status > 0 ->
+                    {:error,
+                     "Preprocessing with command `#{processor}` failed with output: #{err}"}
+
+                  {:error, err} ->
+                    {:error, "Processing failed with output: #{err}"}
                 end
 
-              err ->
-                err
+              {:error, error} ->
+                {:error, error}
             end
           end
 
-        other ->
-          other
+        {:error, error} ->
+          {:error, error}
       end
     else
       {:error, "Could not find processor for format: #{format}"}
@@ -162,8 +173,14 @@ defmodule Iona.Processing do
            dir: dir,
            out: :string
          ) do
-      %{status: 0} -> preprocess(filename, dir, remaining)
-      {:error, err} -> {:error, "Preprocessing with #{preprocessor} failed with output: #{err}"}
+      %{status: 0} ->
+        preprocess(filename, dir, remaining)
+
+      %{status: status, err: err} when status > 0 ->
+        {:error, "Preprocessing with command `#{preprocessor}` failed with output: #{err}"}
+
+      {:error, err} ->
+        {:error, "Preprocessing with #{preprocessor} failed with output: #{err}"}
     end
   end
 
@@ -171,6 +188,9 @@ defmodule Iona.Processing do
     case Porcelain.shell(command, dir: dir, out: :string) do
       %{status: 0} ->
         preprocess(filename, dir, remaining)
+
+      %{status: status, err: err} when status > 0 ->
+        {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}
 
       {:error, err} ->
         {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}

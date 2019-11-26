@@ -4,14 +4,14 @@ defmodule Iona.Template do
   defstruct [:body, :body_path, :content, :include, :helpers]
 
   @type t :: %__MODULE__{
-          body: Iona.eex_tex_t(),
-          body_path: Path.t(),
-          content: iodata,
-          include: [Path.t()],
-          helpers: [atom]
+          body: Iona.eex_tex_t() | nil,
+          body_path: Path.t() | nil,
+          content: iodata | nil,
+          include: [Path.t()] | nil,
+          helpers: [atom] | nil
         }
 
-  @spec fill(assigns :: Keyword.t() | Map.t(), template :: t) :: {:ok, t} | {:error, binary}
+  @spec fill(assigns :: Keyword.t() | map(), template :: t) :: {:ok, t} | {:error, binary}
   def fill(assigns, %{body: body} = template) when is_binary(body) do
     {:ok, %{template | content: eval(prepare(body, template), assigns)}}
   end
@@ -21,7 +21,7 @@ defmodule Iona.Template do
       {:ok, data} ->
         {:ok, %{template | content: eval(prepare(data, template), assigns, file: path)}}
 
-      _ ->
+      {:error, _error} ->
         {:error, "Could not read template at path #{path}"}
     end
   end
@@ -30,7 +30,7 @@ defmodule Iona.Template do
     {:error, "Invalid template"}
   end
 
-  @spec prepare(raw :: Iona.eex_tex_t(), template :: Iono.Template.t()) :: Iona.eex_tex_t()
+  @spec prepare(raw :: Iona.eex_tex_t(), template :: Iona.Template.t()) :: Iona.eex_tex_t()
   defp prepare(raw, %{helpers: helpers}) do
     bootstrap(helpers |> List.wrap()) <> raw
   end

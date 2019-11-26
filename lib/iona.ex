@@ -5,23 +5,23 @@ defmodule Iona do
   Fill in a template with assignments, with TeX escaping support
 
   ```
-  [title: "An Article", author: "Bruce Williams"]
+  {:ok, template} = [title: "An Article", author: "Bruce Williams"]
   |> Iona.template(path: "/path/to/article.tex")
-  |> Iona.write("/path/to/article.pdf")
+
+  Iona.write(template, "/path/to/article.pdf")
   ```
   """
   @type template_opts :: [
           {:path, Path.t()}
         ]
-  @spec template(assigns :: Keyword.t(), criteria :: eex_tex_t) :: Iona.Template.t()
+  @spec template(assigns :: Keyword.t() | map, criteria :: eex_tex_t) ::
+          {:ok, Iona.Template.t()} | {:error, term}
   def template(assigns, criteria) when is_binary(criteria) do
-    case assigns |> Iona.Template.fill(%Iona.Template{body: criteria}) do
-      {:ok, template} -> template
-      other -> other
-    end
+    assigns |> Iona.Template.fill(%Iona.Template{body: criteria})
   end
 
-  @spec template(assigns :: Keyword.t(), criteria :: template_opts) :: Iona.Template.t()
+  @spec template(assigns :: Keyword.t() | map, criteria :: template_opts) ::
+          {:ok, Iona.Template.t()} | {:error, term}
   def template(assigns, criteria) when is_list(criteria) do
     template = %Iona.Template{
       body_path: Keyword.get(criteria, :path),
@@ -29,9 +29,25 @@ defmodule Iona do
       helpers: Keyword.get(criteria, :helpers, [])
     }
 
-    case assigns |> Iona.Template.fill(template) do
-      {:ok, template} -> template
-      other -> other
+    assigns |> Iona.Template.fill(template)
+  end
+
+  @doc """
+  The same as `template/2`, but raises `Iona.ProcessingError` if it fails.
+  Returns the template otherwise.
+
+  ```
+  [title: "An Article", author: "Bruce Williams"]
+  |> Iona.template!(path: "/path/to/article.tex")
+  |> Iona.write("/path/to/article.pdf")
+  ```
+  """
+  @spec template!(assigns :: Keyword.t() | map, criteria :: eex_tex_t | template_opts) ::
+          Iona.Template.t()
+  def template!(assigns, criteria) do
+    case template(assigns, criteria) do
+      {:ok, result} -> result
+      {:error, err} -> raise Iona.Processing.ProcessingError, message: err
     end
   end
 
@@ -89,9 +105,9 @@ defmodule Iona do
   @type executable_t :: binary
 
   @type processing_opts :: [
-          {:preprocess, [executable_t]},
-          {:processor, executable_t},
-          {:prepare, Path.t()}
+          {:preprocess, [executable_t]}
+          | {:processor, executable_t}
+          | {:prepare, Path.t()}
         ]
 
   @doc """
@@ -119,7 +135,7 @@ defmodule Iona do
   def to(input, format, opts \\ []) do
     case input |> Iona.Processing.process(format, opts) do
       {:ok, document} -> document |> Iona.Document.read()
-      other -> other
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -169,7 +185,9 @@ defmodule Iona do
   @spec write(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) ::
           :ok | {:error, term}
   def write(input, path, opts \\ []) do
-    result = input |> Iona.Processing.process(path |> Iona.Processing.to_format(), opts)
+    result =
+      input
+      |> Iona.Processing.process(path |> Iona.Processing.to_format(), opts)
 
     case result do
       {:ok, document} ->
@@ -178,8 +196,8 @@ defmodule Iona do
       {:prepared, directory, commands} ->
         write_build_script(directory, commands)
 
-      other ->
-        other
+      {:error, error} ->
+        {:error, error}
     end
   end
 
@@ -200,8 +218,7 @@ defmodule Iona do
   |> Iona.write!("/path/to/document.pdf", processor: "xetex")
   ```
   """
-  @spec write!(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) ::
-          :ok | no_return
+  @spec write!(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) :: :ok
   def write!(input, path, opts \\ []) do
     case write(input, path, opts) do
       :ok -> :ok
