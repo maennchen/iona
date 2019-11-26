@@ -107,7 +107,6 @@ defmodule Iona do
   @type processing_opts :: [
           {:preprocess, [executable_t]}
           | {:processor, executable_t}
-          | {:prepare, Path.t()}
         ]
 
   @doc """
@@ -185,16 +184,11 @@ defmodule Iona do
   @spec write(input :: Iona.Input.t(), path :: Path.t(), opts :: processing_opts) ::
           :ok | {:error, term}
   def write(input, path, opts \\ []) do
-    result =
-      input
-      |> Iona.Processing.process(path |> Iona.Processing.to_format(), opts)
-
-    case result do
+    input
+    |> Iona.Processing.process(path |> Iona.Processing.to_format(), opts)
+    |> case do
       {:ok, document} ->
         Iona.Document.write(document, path)
-
-      {:prepared, directory, commands} ->
-        write_build_script(directory, commands)
 
       {:error, error} ->
         {:error, error}
@@ -226,12 +220,58 @@ defmodule Iona do
     end
   end
 
+  @doc """
+  Generate a directory with a build script that can be run to finalize the build.
+
+  ## Examples
+
+      iex> Iona.source(path: "academic.tex")
+      iex> |> Iona.prepare!("/path/to/build/directory", :pdf, preprocess: ~w(latex bibtex latex))
+      :ok
+
+  """
+  @spec prepare(
+          input :: Iona.Input.t(),
+          output :: Path.t(),
+          format :: Iona.supported_format_t(),
+          opts :: processing_opts
+        ) :: :ok | {:error, term}
+  def prepare(input, output, format, opts \\ []) do
+    with {:ok, commands} <- Iona.Processing.prepare(input, output, format, opts),
+         :ok <- write_build_script(output, commands) do
+      :ok
+    else
+      {:error, error} ->
+        {:error, error}
+    end
+  end
+
+  @doc """
+  The same as `prepare/4` but raises `Iona.ProcessingError if it fails.
+  """
+  @spec prepare!(
+          input :: Iona.Input.t(),
+          output :: Path.t(),
+          format :: Iona.supported_format_t(),
+          opts :: processing_opts
+        ) :: :ok
+  def prepare!(input, output, format, opts \\ []) do
+    case prepare(input, output, format, opts) do
+      :ok -> :ok
+      {:error, err} -> raise Iona.Processing.ProcessingError, message: err
+    end
+  end
+
   @spec write_build_script(Path.t(), [String.t()]) :: :ok | {:error, File.posix()}
   defp write_build_script(directory, commands) do
     script = Path.join(directory, "build.sh")
 
-    with :ok <- File.write(script, script_content(commands)) do
-      File.chmod(script, 0o755)
+    with :ok <- File.write(script, script_content(commands)),
+         :ok <- File.chmod(script, 0o755) do
+      :ok
+    else
+      {:error, error} ->
+        {:error, error}
     end
   end
 

@@ -50,7 +50,7 @@ defmodule Test.Iona do
   end
 
   test "to returns error with invalid command" do
-    assert {:error, "Processing failed with output: Command not found: invlid_command_name"} =
+    assert {:error, "Command not found: invlid_command_name"} =
              @simple_content |> Iona.source() |> Iona.to(:pdf, processor: "invlid_command_name")
   end
 
@@ -174,6 +174,17 @@ defmodule Test.Iona do
     |> Iona.write!(path, preprocess: ~w(latex bibtex latex))
 
     assert "%PDF" <> _ = File.read!(path)
+  end
+
+  test "prepare! generates a folder with build script" do
+    output = Briefly.create!(prefix: "iona-test", directory: true)
+
+    Iona.source(path: @cite, include: [@citebib])
+    |> Iona.prepare!(output, :pdf, preprocess: ~w(latex bibtex latex))
+
+    assert Enum.member?(File.ls!(output), "build.sh")
+    assert Enum.member?(File.ls!(output), "cite.bib")
+    assert Enum.member?(File.ls!(output), "cite.tex")
   end
 
   defp read_content(%{content: content}), do: content |> IO.iodata_to_binary()

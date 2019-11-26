@@ -83,13 +83,11 @@ Iona.source(path: "academic.tex")
 ```
 
 To generate a directory with a build script that can be run
-to finalize the build, use `:prepare`:
+to finalize the build, use `prepare`:
 
 ```elixir
 Iona.source(path: "academic.tex")
-|> Iona.write!("/path/to/academic.pdf",
-               preprocess: ~w(latex bibtex latex),
-               prepare: "/path/to/prepared/directory")
+|> Iona.prepare!("/path/to/build/directory", :pdf, preprocess: ~w(latex bibtex latex))
 ```
 
 Want to get the raw document content as a binary? Use `to`:
