@@ -1,5 +1,6 @@
 # Taken in part from the Phoenix HTML project,
 # https://github.com/phoenixframework/phoenix_html
+# credo:disable-for-this-file Credo.Check.Design.AliasUsage
 defmodule Iona.Template.Engine do
   @moduledoc false
 

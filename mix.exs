@@ -36,10 +36,11 @@ defmodule Iona.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev},
       {:briefly, "~> 0.3"},
       {:porcelain, "~> 2.0"},
-      {:dialyxir, "~> 1.0-rc", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0-rc", only: [:dev], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:credo, "~> 1.1.0", only: [:dev], runtime: false}
     ]
   end
 
