@@ -25,24 +25,19 @@ We recommend you start your knowledge quest at the
 
 ## Installation
 
-Add as a dependency to your `mix.exs`:
+The package can be installed by adding `iona` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    iona: "~> 0.4"
+    {:iona, "~> 0.4"}
   ]
 end
 ```
 
-Install it with `mix deps.get` and don't forget to add it to your applications list if using
-an older version of Elixir:
-
-```elixir
-def application do
-  [applications: [:iona]]
-end
-```
+Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
+and published on [HexDocs](https://hexdocs.pm). The docs can be found at
+[https://hexdocs.pm/iona](https://hexdocs.pm/iona).
 
 ## LaTeX
 
@@ -135,7 +130,7 @@ Important: As always, only interpolate trusted input into shell commands.
 
 ```elixir
 %{title: "My Document"}
-|> Iona.template(path: "/path/to/template.tex.eex")
+|> Iona.template!(path: "/path/to/template.tex.eex")
 |> Iona.write("/path/to/my_document.pdf")
 ```
 
@@ -165,7 +160,7 @@ additional helpers:
 
 ```elixir
 %{title: "My Document"}
-|> Iona.template(path: "/path/to/template.tex.eex",
+|> Iona.template!(path: "/path/to/template.tex.eex",
                  helpers: [My.Custom.HelperModule])
 |> Iona.write("/path/to/my_document.pdf")
 ```
