@@ -5,6 +5,7 @@
 **/deps*
 erl_crash.dump
 *.ez
+mix.lock
 
 /test/fixtures/*.dvi
 /test/fixtures/*.pdf
