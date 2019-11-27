@@ -108,7 +108,7 @@ defmodule Iona.Processing do
           path :: Path.t()
         ) :: {:ok, Iona.Document.t()} | {:prepared, Path.t(), String.t()} | {:error, binary}
   defp do_process(input, format, opts, path) do
-    with processor when not is_nil(processor) <-
+    with <<processor::binary>> <-
            Keyword.get(opts, :processor, Keyword.get(Iona.Config.processors(), format, nil)),
          ext <- Path.extname(path),
          {:ok, regex} <- Regex.compile("\\#{ext}$"),
@@ -118,20 +118,19 @@ defmodule Iona.Processing do
          preprocessors <- Keyword.get(opts, :preprocess, Iona.Config.preprocess()),
          :ok <- copy_includes(dirname, Iona.Input.included_files(input)),
          :ok <- preprocess(Path.basename(path), dirname, preprocessors),
-         %{status: 0} <-
-           Porcelain.exec(
-             processor,
-             executable_default_args(processor) ++ [basename],
-             dir: dirname,
-             out: :string
+         <<processor::binary>> <- System.find_executable(processor),
+         {:ok, _} <-
+           Exexec.run(
+             [processor | executable_default_args(processor) ++ [basename]],
+             cd: dirname,
+             sync: true,
+             stdout: true,
+             stderr: true
            ) do
       {:ok, %Iona.Document{format: format, output_path: output_path}}
     else
       {:error, error} ->
         {:error, error}
-
-      %{status: status, err: err} when status > 0 ->
-        {:error, "Preprocessing failed with output: #{err}"}
 
       nil ->
         {:error, "Could not find processor for format: #{format}"}
@@ -179,17 +178,16 @@ defmodule Iona.Processing do
   defp preprocess(filename, dir, [preprocessor | remaining]) when is_binary(preprocessor) do
     basename = Path.basename(filename, Path.extname(filename))
 
-    case Porcelain.exec(
-           preprocessor,
-           executable_default_args(preprocessor) ++ [basename],
-           dir: dir,
-           out: :string
-         ) do
-      %{status: 0} ->
-        preprocess(filename, dir, remaining)
+    <<preprocessor::binary>> = System.find_executable(preprocessor)
 
-      %{status: status, err: err} when status > 0 ->
-        {:error, "Preprocessing with command `#{preprocessor}` failed with output: #{err}"}
+    case Exexec.run([preprocessor | executable_default_args(preprocessor) ++ [basename]],
+           cd: dir,
+           sync: true,
+           stdout: true,
+           stderr: true
+         ) do
+      {:ok, _} ->
+        preprocess(filename, dir, remaining)
 
       {:error, err} ->
         {:error, "Preprocessing with #{preprocessor} failed with output: #{err}"}
@@ -197,12 +195,9 @@ defmodule Iona.Processing do
   end
 
   defp preprocess(filename, dir, [{:shell, command} | remaining]) do
-    case Porcelain.shell(command, dir: dir, out: :string) do
-      %{status: 0} ->
+    case Exexec.run(command, cd: dir, sync: true, stdout: true, stderr: true) do
+      {:ok, _} ->
         preprocess(filename, dir, remaining)
-
-      %{status: status, err: err} when status > 0 ->
-        {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}
 
       {:error, err} ->
         {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}

@@ -50,7 +50,7 @@ defmodule Test.Iona do
   end
 
   test "to returns error with invalid command" do
-    assert {:error, "Command not found: invlid_command_name"} =
+    assert {:error, _} =
              @simple_content |> Iona.source() |> Iona.to(:pdf, processor: "invlid_command_name")
   end
 

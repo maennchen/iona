@@ -37,7 +37,7 @@ defmodule Iona.Mixfile do
   defp deps do
     [
       {:briefly, "~> 0.3"},
-      {:porcelain, "~> 2.0"},
+      {:exexec, "~> 0.2"},
       {:dialyxir, "~> 1.0-rc", only: [:dev], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, "~> 1.1.0", only: [:dev], runtime: false}
