@@ -4,7 +4,7 @@ defmodule Iona.Mixfile do
   def project do
     [
       app: :iona,
-      version: "0.4.1",
+      version: "1.0.0-alpha.1",
       elixir: "~> 1.5.1 or ~> 1.6",
       source_url: "https://github.com/jshmrtn/iona",
       build_embeddedalc: Mix.env() == :prod,
@@ -39,7 +39,7 @@ defmodule Iona.Mixfile do
       {:briefly, "~> 0.3"},
       {:exexec, "~> 0.2"},
       {:dialyxir, "~> 1.0-rc", only: [:dev], runtime: false},
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: [:dev]},
       {:credo, "~> 1.1.0", only: [:dev], runtime: false}
     ]
   end
@@ -47,8 +47,8 @@ defmodule Iona.Mixfile do
   defp package do
     [
       description: "Document generation using LaTeX",
-      files: ["lib", "config", "mix.exs", "README*", "LICENSE"],
-      maintainers: ["Bruce Williams"],
+      files: ["lib", "mix.exs", "README*", "LICENSE"],
+      maintainers: ["Bruce Williams", "Jonatan Männchen"],
       licenses: ["Apache 2"],
       links: %{github: "https://github.com/jshmrtn/iona"}
     ]
