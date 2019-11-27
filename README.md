@@ -155,7 +155,7 @@ You can import additional helper modules for use in your templates by two method
 The first (and preferred) method is by overriding the `:helpers` application
 configuration setting (see "Configuration," below).
 
-You can also pass a `:helpers` option to `Iona.template/1` with a list of
+You can also pass a `:helpers` option to `Iona.template/2` with a list of
 additional helpers:
 
 ```elixir

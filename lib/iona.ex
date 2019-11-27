@@ -1,6 +1,24 @@
 defmodule Iona do
   @moduledoc File.read!("#{__DIR__}/../README.md")
 
+  @type template_opts :: [
+          {:path, Path.t()}
+        ]
+  @type source_opts :: [
+          {:path, Path.t()},
+          {:include, [Path.t()]}
+        ]
+
+  @type supported_format_t :: atom
+  @type tex_t :: iodata
+  @type eex_tex_t :: binary
+  @type executable_t :: binary
+
+  @type processing_opts :: [
+          {:preprocess, [executable_t]}
+          | {:processor, executable_t}
+        ]
+
   @doc """
   Fill in a template with assignments, with TeX escaping support
 
@@ -11,9 +29,6 @@ defmodule Iona do
   Iona.write(template, "/path/to/article.pdf")
   ```
   """
-  @type template_opts :: [
-          {:path, Path.t()}
-        ]
   @spec template(assigns :: Keyword.t() | map, criteria :: eex_tex_t) ::
           {:ok, Iona.Template.t()} | {:error, term}
   def template(assigns, criteria) when is_binary(criteria) do
@@ -81,11 +96,6 @@ defmodule Iona do
   However, when possible, files should be placed in the search path of your TeX
   installation.
   """
-  @type source_opts :: [
-          {:path, Path.t()},
-          {:include, [Path.t()]}
-        ]
-
   @spec source(criteria :: binary) :: Iona.Source.t()
   def source(criteria) when is_binary(criteria) do
     %Iona.Source{content: criteria}
@@ -98,16 +108,6 @@ defmodule Iona do
       include: Keyword.get(criteria, :include, [])
     }
   end
-
-  @type supported_format_t :: atom
-  @type tex_t :: iodata
-  @type eex_tex_t :: binary
-  @type executable_t :: binary
-
-  @type processing_opts :: [
-          {:preprocess, [executable_t]}
-          | {:processor, executable_t}
-        ]
 
   @doc """
   Generate a formatted document as a string.
@@ -196,7 +196,7 @@ defmodule Iona do
   end
 
   @doc """
-  The same as `write/3` but raises `Iona.ProcessingError if it fails.
+  The same as `write/3` but raises `Iona.ProcessingError` if it fails.
 
   Without processing options:
 
@@ -247,7 +247,7 @@ defmodule Iona do
   end
 
   @doc """
-  The same as `prepare/4` but raises `Iona.ProcessingError if it fails.
+  The same as `prepare/4` but raises `Iona.ProcessingError` if it fails.
   """
   @spec prepare!(
           input :: Iona.Input.t(),
