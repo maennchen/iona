@@ -19,6 +19,7 @@ defmodule Iona do
           | {:processor, executable_t}
           | {:processor_env, map}
           | {:preprocessor_env, map}
+          | {:compilation_passes, non_neg_integer}
         ]
 
   @doc """

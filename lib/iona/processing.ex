@@ -120,11 +120,16 @@ defmodule Iona.Processing do
          :ok <- preprocess(Path.basename(path), dirname, preprocessors, opts),
          <<processor_path::binary>> <- System.find_executable(processor),
          {_output, 0} <-
-           System.cmd(processor_path, executable_default_args(processor) ++ [basename],
-             stderr_to_stdout: true,
-             cd: dirname,
-             env: Keyword.get(opts, :processor_env, [])
-           ) do
+           Enum.reduce_while(1..Keyword.get(opts, :compilation_passes, 1), {"", 0}, fn _i, _acc ->
+             case System.cmd(processor_path, executable_default_args(processor) ++ [basename],
+                    stderr_to_stdout: true,
+                    cd: dirname,
+                    env: Keyword.get(opts, :processor_env, [])
+                  ) do
+               {_output, 0} = result -> {:cont, result}
+               {_output, status} = result when status > 0 -> {:halt, result}
+             end
+           end) do
       {:ok, %Iona.Document{format: format, output_path: output_path}}
     else
       {:error, error} ->
