@@ -25,3 +25,13 @@ defimpl Iona.Input, for: [Iona.Source, Iona.Template] do
   def included_files(%{include: include}), do: include |> List.wrap()
   def included_files(%{}), do: []
 end
+
+defimpl Iona.Template.Safe, for: [Iona.Source, Iona.Template] do
+  def to_iodata(input) do
+    if Iona.Input.path?(input) do
+      File.read!(Iona.Input.path(input))
+    else
+      Iona.Input.content(input)
+    end
+  end
+end
