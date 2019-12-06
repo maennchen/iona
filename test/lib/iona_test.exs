@@ -1,18 +1,20 @@
 defmodule Test.Iona do
   use ExUnit.Case, async: true
 
-  @bad "test/fixtures/does/not/exist.tex"
-  @simple "test/fixtures/simple.tex"
+  @bad Application.app_dir(:iona, "priv/test/fixtures/does/not/exist.tex")
+  @simple Application.app_dir(:iona, "priv/test/fixtures/simple.tex")
   @simple_content File.read!(@simple)
-  @invalid "test/fixtures/invalid.tex"
+  @invalid Application.app_dir(:iona, "priv/test/fixtures/invalid.tex")
   @invalid_content File.read!(@invalid)
-  @cite "test/fixtures/cite.tex"
-  @citebib "test/fixtures/cite.bib"
-  @items_template "test/fixtures/items.tex.eex"
-  @add_two_template "test/fixtures/add-two.tex.eex"
-  @raw_template "test/fixtures/raw.tex.eex"
-  @image_template "test/fixtures/image.tex.eex"
-  @image "test/fixtures/latex-project-logo.jpg"
+  @custom_texinput Application.app_dir(:iona, "priv/test/fixtures/custom_texinput.tex")
+  @custom_texinput_content File.read!(@custom_texinput)
+  @cite Application.app_dir(:iona, "priv/test/fixtures/cite.tex")
+  @citebib Application.app_dir(:iona, "priv/test/fixtures/cite.bib")
+  @items_template Application.app_dir(:iona, "priv/test/fixtures/items.tex.eex")
+  @add_two_template Application.app_dir(:iona, "priv/test/fixtures/add-two.tex.eex")
+  @raw_template Application.app_dir(:iona, "priv/test/fixtures/raw.tex.eex")
+  @image_template Application.app_dir(:iona, "priv/test/fixtures/image.tex.eex")
+  @image Application.app_dir(:iona, "priv/test/fixtures/latex-project-logo.jpg")
 
   test "creates an input from raw TeX" do
     assert Iona.source(@simple_content) |> Iona.Input.content() == @simple_content
@@ -54,6 +56,15 @@ defmodule Test.Iona do
   test "to returns a tuple with invalid tex" do
     assert {:error, "Error executing processor with status code 1 and output This is pdfTeX" <> _} =
              @invalid_content |> Iona.source() |> Iona.to(:pdf)
+  end
+
+  test "to honours TEXINPUTS" do
+    assert {:ok, out} =
+             @custom_texinput_content
+             |> Iona.source()
+             |> Iona.to(:pdf, texinput: Application.app_dir(:iona, "priv/test/fixtures/texinput"))
+
+    assert String.starts_with?(out, "%PDF")
   end
 
   test "to returns error with invalid command" do

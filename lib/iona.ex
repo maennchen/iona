@@ -17,6 +17,7 @@ defmodule Iona do
   @type processing_opts :: [
           {:preprocess, [executable_t]}
           | {:processor, executable_t}
+          | {:texinput, Path.t()}
         ]
 
   @doc """

@@ -117,12 +117,15 @@ defmodule Iona.Processing do
          dirname <- Path.dirname(path),
          preprocessors <- Keyword.get(opts, :preprocess, Iona.Config.preprocess()),
          :ok <- copy_includes(dirname, Iona.Input.included_files(input)),
-         :ok <- preprocess(Path.basename(path), dirname, preprocessors),
+         :ok <- preprocess(Path.basename(path), dirname, preprocessors, opts),
          <<processor_path::binary>> <- System.find_executable(processor),
          {_output, 0} <-
            System.cmd(processor_path, executable_default_args(processor) ++ [basename],
              stderr_to_stdout: true,
-             cd: dirname
+             cd: dirname,
+             env: %{
+               "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
+             }
            ) do
       {:ok, %Iona.Document{format: format, output_path: output_path}}
     else
@@ -171,21 +174,29 @@ defmodule Iona.Processing do
     end
   end
 
-  @spec preprocess(filename :: binary, dir :: Path.t(), preprocessors :: [Iona.executable_t()]) ::
+  @spec preprocess(
+          filename :: binary,
+          dir :: Path.t(),
+          preprocessors :: [Iona.executable_t()],
+          opts :: Iona.processing_opts()
+        ) ::
           :ok | {:error, binary}
-  defp preprocess(_filename, _dir, []), do: :ok
+  defp preprocess(_filename, _dir, [], _opts), do: :ok
 
-  defp preprocess(filename, dir, [preprocessor | remaining]) when is_binary(preprocessor) do
+  defp preprocess(filename, dir, [preprocessor | remaining], opts) when is_binary(preprocessor) do
     basename = Path.basename(filename, Path.extname(filename))
 
     <<preprocessor_path::binary>> = System.find_executable(preprocessor)
 
     case System.cmd(preprocessor_path, executable_default_args(preprocessor) ++ [basename],
            cd: dir,
-           stderr_to_stdout: true
+           stderr_to_stdout: true,
+           env: %{
+             "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
+           }
          ) do
       {_output, 0} ->
-        preprocess(filename, dir, remaining)
+        preprocess(filename, dir, remaining, opts)
 
       {output, status} when is_binary(output) and status > 0 ->
         {:error,
@@ -195,10 +206,16 @@ defmodule Iona.Processing do
     end
   end
 
-  defp preprocess(filename, dir, [{:shell, command} | remaining]) do
-    case System.cmd("/bin/sh", ["-c", command], cd: dir, stderr_to_stdout: true) do
+  defp preprocess(filename, dir, [{:shell, command} | remaining], opts) do
+    case System.cmd("/bin/sh", ["-c", command],
+           cd: dir,
+           stderr_to_stdout: true,
+           env: %{
+             "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
+           }
+         ) do
       {_output, 0} ->
-        preprocess(filename, dir, remaining)
+        preprocess(filename, dir, remaining, opts)
 
       {output, status} when is_binary(output) and status > 0 ->
         {:error,
@@ -208,10 +225,11 @@ defmodule Iona.Processing do
     end
   end
 
-  defp preprocess(filename, dir, [preprocessor | remaining]) when is_function(preprocessor) do
+  defp preprocess(filename, dir, [preprocessor | remaining], opts)
+       when is_function(preprocessor) do
     case preprocessor.(dir, filename) do
-      :ok -> preprocess(filename, dir, remaining)
-      {:shell, _command} = shell -> preprocess(filename, dir, [shell | remaining])
+      :ok -> preprocess(filename, dir, remaining, opts)
+      {:shell, _command} = shell -> preprocess(filename, dir, [shell | remaining], opts)
       {:error, _} = failure -> failure
     end
   end
