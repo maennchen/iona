@@ -4,6 +4,8 @@ defmodule Test.Iona do
   @bad "test/fixtures/does/not/exist.tex"
   @simple "test/fixtures/simple.tex"
   @simple_content File.read!(@simple)
+  @invalid "test/fixtures/invalid.tex"
+  @invalid_content File.read!(@invalid)
   @cite "test/fixtures/cite.tex"
   @citebib "test/fixtures/cite.bib"
   @items_template "test/fixtures/items.tex.eex"
@@ -47,6 +49,11 @@ defmodule Test.Iona do
   test "to returns a tuple with a PDF binary from content" do
     assert {:ok, out} = @simple_content |> Iona.source() |> Iona.to(:pdf)
     assert String.starts_with?(out, "%PDF")
+  end
+
+  test "to returns a tuple with invalid tex" do
+    assert {:error, "Error executing processor with status code 1 and output This is pdfTeX" <> _} =
+             @invalid_content |> Iona.source() |> Iona.to(:pdf)
   end
 
   test "to returns error with invalid command" do

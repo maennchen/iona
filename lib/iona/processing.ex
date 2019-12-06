@@ -118,9 +118,9 @@ defmodule Iona.Processing do
          preprocessors <- Keyword.get(opts, :preprocess, Iona.Config.preprocess()),
          :ok <- copy_includes(dirname, Iona.Input.included_files(input)),
          :ok <- preprocess(Path.basename(path), dirname, preprocessors),
-         <<processor::binary>> <- System.find_executable(processor),
+         <<processor_path::binary>> <- System.find_executable(processor),
          {_output, 0} <-
-           System.cmd(processor, executable_default_args(processor) ++ [basename],
+           System.cmd(processor_path, executable_default_args(processor) ++ [basename],
              stderr_to_stdout: true,
              cd: dirname
            ) do
@@ -178,9 +178,9 @@ defmodule Iona.Processing do
   defp preprocess(filename, dir, [preprocessor | remaining]) when is_binary(preprocessor) do
     basename = Path.basename(filename, Path.extname(filename))
 
-    <<preprocessor::binary>> = System.find_executable(preprocessor)
+    <<preprocessor_path::binary>> = System.find_executable(preprocessor)
 
-    case System.cmd(preprocessor, executable_default_args(preprocessor) ++ [basename],
+    case System.cmd(preprocessor_path, executable_default_args(preprocessor) ++ [basename],
            cd: dir,
            stderr_to_stdout: true
          ) do
