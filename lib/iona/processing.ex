@@ -123,9 +123,7 @@ defmodule Iona.Processing do
            System.cmd(processor_path, executable_default_args(processor) ++ [basename],
              stderr_to_stdout: true,
              cd: dirname,
-             env: %{
-               "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
-             }
+             env: Keyword.get(opts, :processor_env, [])
            ) do
       {:ok, %Iona.Document{format: format, output_path: output_path}}
     else
@@ -191,9 +189,7 @@ defmodule Iona.Processing do
     case System.cmd(preprocessor_path, executable_default_args(preprocessor) ++ [basename],
            cd: dir,
            stderr_to_stdout: true,
-           env: %{
-             "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
-           }
+           env: Keyword.get(opts, :preprocessor_env, [])
          ) do
       {_output, 0} ->
         preprocess(filename, dir, remaining, opts)
@@ -210,9 +206,7 @@ defmodule Iona.Processing do
     case System.cmd("/bin/sh", ["-c", command],
            cd: dir,
            stderr_to_stdout: true,
-           env: %{
-             "TEXINPUTS" => "#{Keyword.get(opts, :texinput, "")}:#{System.get_env("TEXINPUTS")}"
-           }
+           env: Keyword.get(opts, :preprocessor_env, [])
          ) do
       {_output, 0} ->
         preprocess(filename, dir, remaining, opts)

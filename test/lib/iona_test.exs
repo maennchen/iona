@@ -62,7 +62,13 @@ defmodule Test.Iona do
     assert {:ok, out} =
              @custom_texinput_content
              |> Iona.source()
-             |> Iona.to(:pdf, texinput: Application.app_dir(:iona, "priv/test/fixtures/texinput"))
+             |> Iona.to(:pdf,
+               processor_env: %{
+                 "TEXINPUTS" =>
+                   Application.app_dir(:iona, "priv/test/fixtures/texinput") <>
+                     ":" <> (System.get_env("TEXINPUTS") || "")
+               }
+             )
 
     assert String.starts_with?(out, "%PDF")
   end
