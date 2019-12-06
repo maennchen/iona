@@ -119,18 +119,18 @@ defmodule Iona.Processing do
          :ok <- copy_includes(dirname, Iona.Input.included_files(input)),
          :ok <- preprocess(Path.basename(path), dirname, preprocessors),
          <<processor::binary>> <- System.find_executable(processor),
-         {:ok, _} <-
-           Exexec.run(
-             [processor | executable_default_args(processor) ++ [basename]],
-             cd: dirname,
-             sync: true,
-             stdout: true,
-             stderr: true
+         {_output, 0} <-
+           System.cmd(processor, executable_default_args(processor) ++ [basename],
+             stderr_to_stdout: true,
+             cd: dirname
            ) do
       {:ok, %Iona.Document{format: format, output_path: output_path}}
     else
       {:error, error} ->
         {:error, error}
+
+      {output, status} when is_binary(output) and status > 0 ->
+        {:error, "Error executing processor with status code #{status} and output #{output}"}
 
       nil ->
         {:error, "Could not find processor for format: #{format}"}
@@ -180,27 +180,31 @@ defmodule Iona.Processing do
 
     <<preprocessor::binary>> = System.find_executable(preprocessor)
 
-    case Exexec.run([preprocessor | executable_default_args(preprocessor) ++ [basename]],
+    case System.cmd(preprocessor, executable_default_args(preprocessor) ++ [basename],
            cd: dir,
-           sync: true,
-           stdout: true,
-           stderr: true
+           stderr_to_stdout: true
          ) do
-      {:ok, _} ->
+      {_output, 0} ->
         preprocess(filename, dir, remaining)
 
-      {:error, err} ->
-        {:error, "Preprocessing with #{preprocessor} failed with output: #{err}"}
+      {output, status} when is_binary(output) and status > 0 ->
+        {:error,
+         "Preprocessing with command `#{preprocessor}` failed with status code #{status} output: #{
+           output
+         }"}
     end
   end
 
   defp preprocess(filename, dir, [{:shell, command} | remaining]) do
-    case Exexec.run(command, cd: dir, sync: true, stdout: true, stderr: true) do
-      {:ok, _} ->
+    case System.cmd("/bin/sh", ["-c", command], cd: dir, stderr_to_stdout: true) do
+      {_output, 0} ->
         preprocess(filename, dir, remaining)
 
-      {:error, err} ->
-        {:error, "Preprocessing with command `#{command}` failed with output: #{err}"}
+      {output, status} when is_binary(output) and status > 0 ->
+        {:error,
+         "Preprocessing with command `#{command}` failed with status code #{status} output: #{
+           output
+         }"}
     end
   end
 
