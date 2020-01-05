@@ -2,7 +2,9 @@ defmodule Iona do
   @moduledoc File.read!("#{__DIR__}/../README.md")
 
   @type template_opts :: [
-          {:path, Path.t()}
+          {:path, Path.t()},
+          {:include, [Path.t()]},
+          {:helpers, [atom]}
         ]
   @type source_opts :: [
           {:path, Path.t()},
