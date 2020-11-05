@@ -1,5 +1,5 @@
 defprotocol Iona.Input do
-  @type t :: any
+  @type t :: Iona.Source.t() | Iona.Template.t()
 
   @spec path?(input :: t) :: boolean
   def path?(input)
