@@ -46,7 +46,7 @@ defmodule Iona.Template.Engine do
   end
 
   @impl true
-  def handle_text(state, text) do
+  def handle_text(state, _meta, text) do
     %{iodata: iodata} = state
     %{state | iodata: [text | iodata]}
   end
