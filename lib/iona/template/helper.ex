@@ -45,7 +45,7 @@ defmodule Iona.Template.Helper do
 
   for {match, insert} <- escapes do
     defp to_iodata(<<unquote(match), rest::bits>>, skip, original, acc) do
-      to_iodata(rest, skip + 1, original, [acc | unquote(insert)])
+      to_iodata(rest, skip + 1, original, [acc | [unquote(insert)]])
     end
   end
 
@@ -60,7 +60,7 @@ defmodule Iona.Template.Helper do
   for {match, insert} <- escapes do
     defp to_iodata(<<unquote(match), rest::bits>>, skip, original, acc, len) do
       part = binary_part(original, skip, len)
-      to_iodata(rest, skip + len + 1, original, [acc, part | unquote(insert)])
+      to_iodata(rest, skip + len + 1, original, [acc, part | [unquote(insert)]])
     end
   end
 
