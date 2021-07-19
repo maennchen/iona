@@ -6,6 +6,9 @@ defmodule Iona.Template.Helper do
   value in a `<%= %>` concat tag.
   """
 
+  @dialyzer {:no_improper_lists, to_iodata: 4}
+  @dialyzer {:no_improper_lists, to_iodata: 5}
+
   escapes = [
     {?{, "\\{"},
     {?}, "\\}"},
