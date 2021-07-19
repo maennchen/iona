@@ -6,6 +6,9 @@ defmodule Iona.Template.Helper do
   value in a `<%= %>` concat tag.
   """
 
+  @dialyzer {:no_improper_lists, to_iodata: 4}
+  @dialyzer {:no_improper_lists, to_iodata: 5}
+
   escapes = [
     {?{, "\\{"},
     {?}, "\\}"},
@@ -45,7 +48,7 @@ defmodule Iona.Template.Helper do
 
   for {match, insert} <- escapes do
     defp to_iodata(<<unquote(match), rest::bits>>, skip, original, acc) do
-      to_iodata(rest, skip + 1, original, [acc | [unquote(insert)]])
+      to_iodata(rest, skip + 1, original, [acc | unquote(insert)])
     end
   end
 
@@ -60,7 +63,7 @@ defmodule Iona.Template.Helper do
   for {match, insert} <- escapes do
     defp to_iodata(<<unquote(match), rest::bits>>, skip, original, acc, len) do
       part = binary_part(original, skip, len)
-      to_iodata(rest, skip + len + 1, original, [acc, part | [unquote(insert)]])
+      to_iodata(rest, skip + len + 1, original, [acc, part | unquote(insert)])
     end
   end
 
