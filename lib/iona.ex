@@ -20,7 +20,9 @@ defmodule Iona do
           {:preprocess, [executable_t]}
           | {:processor, executable_t}
           | {:processor_env, map}
+          | {:processor_extra_args, [String.t()]}
           | {:preprocessor_env, map}
+          | {:preprocessor_extra_args, [String.t()]}
           | {:compilation_passes, non_neg_integer}
         ]
 

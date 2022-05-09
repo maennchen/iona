@@ -121,7 +121,13 @@ defmodule Iona.Processing do
          <<processor_path::binary>> <- System.find_executable(processor),
          {_output, 0} <-
            Enum.reduce_while(1..Keyword.get(opts, :compilation_passes, 1), {"", 0}, fn _i, _acc ->
-             case System.cmd(processor_path, executable_default_args(processor) ++ [basename],
+             case System.cmd(
+                    processor_path,
+                    Enum.concat([
+                      executable_default_args(processor),
+                      Keyword.get(opts, :processor_extra_args, []),
+                      [basename]
+                    ]),
                     stderr_to_stdout: true,
                     cd: dirname,
                     env: Keyword.get(opts, :processor_env, [])
@@ -191,7 +197,13 @@ defmodule Iona.Processing do
 
     <<preprocessor_path::binary>> = System.find_executable(preprocessor)
 
-    case System.cmd(preprocessor_path, executable_default_args(preprocessor) ++ [basename],
+    case System.cmd(
+           preprocessor_path,
+           Enum.concat([
+             executable_default_args(preprocessor),
+             Keyword.get(opts, :preprocessor_extra_args, []),
+             [basename]
+           ]),
            cd: dir,
            stderr_to_stdout: true,
            env: Keyword.get(opts, :preprocessor_env, [])
