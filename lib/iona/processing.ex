@@ -201,9 +201,7 @@ defmodule Iona.Processing do
 
       {output, status} when is_binary(output) and status > 0 ->
         {:error,
-         "Preprocessing with command `#{preprocessor}` failed with status code #{status} output: #{
-           output
-         }"}
+         "Preprocessing with command `#{preprocessor}` failed with status code #{status} output: #{output}"}
     end
   end
 
@@ -218,9 +216,7 @@ defmodule Iona.Processing do
 
       {output, status} when is_binary(output) and status > 0 ->
         {:error,
-         "Preprocessing with command `#{command}` failed with status code #{status} output: #{
-           output
-         }"}
+         "Preprocessing with command `#{command}` failed with status code #{status} output: #{output}"}
     end
   end
 
