@@ -142,7 +142,8 @@ defmodule Iona.Processing do
                     ]),
                     stderr_to_stdout: true,
                     cd: dirname,
-                    env: Keyword.get(opts, :processor_env, [])
+                    env: Keyword.get(opts, :processor_env, []),
+                    into: if(Keyword.get(opts, :debug, false), do: IO.stream(), else: "")
                   ) do
                {_output, 0} = result -> {:cont, result}
                {_output, status} = result when status > 0 -> {:halt, result}
