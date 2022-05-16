@@ -16,6 +16,10 @@ defmodule Iona.Processing do
     "xelatex" => @nonstopmode
   }
 
+  @not_last_compilation_executable_default_args %{
+    "xelatex" => ["-no-pdf"]
+  }
+
   @spec to_format(path :: Path.t()) :: Iona.supported_format_t()
   def to_format(path) do
     format = path |> parse_format
@@ -119,12 +123,20 @@ defmodule Iona.Processing do
          :ok <- copy_includes(dirname, Iona.Input.included_files(input)),
          :ok <- preprocess(Path.basename(path), dirname, preprocessors, opts),
          <<processor_path::binary>> <- System.find_executable(processor),
+         compilation_passes = Keyword.get(opts, :compilation_passes, 1),
          {_output, 0} <-
-           Enum.reduce_while(1..Keyword.get(opts, :compilation_passes, 1), {"", 0}, fn _i, _acc ->
+           Enum.reduce_while(1..compilation_passes, {"", 0}, fn i, _acc ->
              case System.cmd(
                     processor_path,
                     Enum.concat([
                       executable_default_args(processor),
+                      if(i == compilation_passes,
+                        do: [],
+                        else:
+                          List.wrap(
+                            @not_last_compilation_executable_default_args[processor] || []
+                          )
+                      ),
                       Keyword.get(opts, :processor_extra_args, []),
                       [basename]
                     ]),
