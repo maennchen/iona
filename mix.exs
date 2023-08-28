@@ -6,7 +6,7 @@ defmodule Iona.Mixfile do
       app: :iona,
       version: "1.0.0-alpha.9",
       elixir: "~> 1.5.1 or ~> 1.6",
-      source_url: "https://github.com/jshmrtn/iona",
+      source_url: "https://github.com/maennchen/iona",
       build_embeddedalc: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       package: package(),
@@ -49,7 +49,7 @@ defmodule Iona.Mixfile do
       files: ["lib", "mix.exs", "README*", "LICENSE"],
       maintainers: ["Bruce Williams", "Jonatan Männchen"],
       licenses: ["Apache 2"],
-      links: %{github: "https://github.com/jshmrtn/iona"}
+      links: %{github: "https://github.com/maennchen/iona"}
     ]
   end
 

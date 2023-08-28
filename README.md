@@ -1,6 +1,6 @@
 Iona
 ====
-[![Build Status](https://travis-ci.com/jshmrtn/iona.svg?branch=master)](https://travis-ci.com/jshmrtn/iona)
+[![Build Status](https://travis-ci.com/maennchen/iona.svg?branch=master)](https://travis-ci.com/maennchen/iona)
 [![Hex.pm](https://img.shields.io/hexpm/v/iona)](https://hex.pm/packages/iona)
 [![Hex.pm](https://img.shields.io/hexpm/l/iona)](https://hex.pm/packages/iona)
 [![Hex.pm](https://img.shields.io/hexpm/dt/iona)](https://hex.pm/packages/iona)
